@@ -1,10 +1,13 @@
 # project-OS-front
 
 ### 2025-05-04
-웹사이트 intro 페이지 추가
+웹사이트 intro 페이지 (project_os_intro.html)추가
+
 
 ### 2025-05-06 
-Tesseract.js(프론트엔드에서 가능)를 이용한 영수증 인식 페이지 추가
+Tesseract.js(프론트엔드에서 가능)를 이용한 영수증 인식 페이지 (input-spending.html)추가
+
 -> 예상보다 한국어 인식이 잘 안됨
+
 -> 백엔드를 이용한 오픈소스로 변경 필요
 
