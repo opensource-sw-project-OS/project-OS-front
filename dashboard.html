@@ -1,13 +1,9 @@
-<!-- ✅ 기존 스타일을 유지하면서 점메추 및 예산 기능 모두 포함된 버전 -->
-<!-- 지도용 카카오 API Key 필요: 아래 YOUR_KAKAO_API_KEY_HERE 부분에 실제 키 입력 -->
-
+<!-- ✅ 스타일 유지 + 점메추, 예산, 지출 완전 통합 버전 (예산/점메추는 폭 복원) -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>대시보드 + 예산 + 점메추</title>
-
-  <!-- SUIT 폰트 -->
+  <title>대시보드</title>
   <style>
     @font-face {
       font-family: 'SUIT';
@@ -16,15 +12,10 @@
       src: url('https://cdn.jsdelivr.net/gh/sunn-us/SUIT/fonts/static/woff2/SUIT-Regular.woff2') format('woff2');
     }
   </style>
-
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- 카카오 맵 API -->
-<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=YOUR_KEY_HERE&libraries=services"></script>
-
+  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=YOUR_KAKAO_API_KEY_HERE&libraries=services"></script>
   <style>
     * { box-sizing: border-box; }
-
     body {
       margin: 0;
       font-family: 'SUIT', sans-serif;
@@ -32,7 +23,6 @@
       height: 100vh;
       background: linear-gradient(to bottom, #d7dadd 0%, #c4c9d6 60%, #b0c4db 100%);
     }
-
     .side-menu {
       width: 220px;
       display: flex;
@@ -41,7 +31,6 @@
       padding: 100px 0;
       gap: 20px;
     }
-
     .pill-menu {
       margin-top: 13px;
       margin-left: 100px;
@@ -56,57 +45,54 @@
       color: #333;
       font-size: 17px;
       font-weight: 600;
-      transition: background 0.2s;
       cursor: pointer;
-      justify-content: flex-start;
       backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
     }
-
     .pill-menu:hover {
       background: rgba(255, 255, 255, 0.6);
     }
-
     .pill-menu img {
       margin-left: 20px;
       width: 33px;
       height: 33px;
-      flex-shrink: 0;
     }
-
     .main-content {
       flex: 1;
       padding: 40px;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
+      overflow-y: auto;
+      gap: 20px;
     }
-
     .glass-box {
-      width: 600px;
-      height: auto;
+      max-width: 600px;
+      width: 100%;
       padding: 20px;
       background: rgba(255, 255, 255, 0.7);
       border-radius: 20px;
       backdrop-filter: blur(15px);
-      -webkit-backdrop-filter: blur(15px);
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
       text-align: center;
     }
-
-    .glass-box input {
-      width: 80%;
-      padding: 10px;
-      margin: 10px 0;
-      border: none;
-      border-radius: 10px;
-      font-size: 16px;
+    .glass-row-2 {
+      display: flex;
+      gap: 20px;
+      width: 90%;
     }
-
+    .glass-col {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 20px;
+      padding: 20px;
+      backdrop-filter: blur(15px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
     canvas {
       margin-top: 20px;
+      background: transparent;
+      border-radius: 10px;
     }
-
     #map {
       width: 100%;
       height: 400px;
@@ -115,128 +101,199 @@
     }
   </style>
 </head>
-<body>
-
-  <aside class="side-menu">
-    <div class="pill-menu">
-      <img src="image/money2.png" alt="지출"> 지출
-    </div>
-    <div class="pill-menu">
-      <img src="image/emotion.png" alt="감정"> 감정
-    </div>
-    <div class="pill-menu" onclick="showBudget()">
-      <img src="image/budget.png" alt="예산"> 예산
-    </div>
-    <div class="pill-menu" onclick="showLunchMap()">
-      <img src="image/dish.png" alt="점메추"> 점메추
-    </div>
-  </aside>
-
-  <main class="main-content" id="main"></main>
-
-  <script>
-    let chart;
-
-    function showBudget() {
-      document.getElementById("main").innerHTML = `
-        <div class="glass-box">
-          <h2>이번 달 예산</h2>
-          <input type="number" id="totalBudget" placeholder="총 예산 입력 (₩)" />
-          <input type="number" id="usedBudget" placeholder="사용한 금액 입력 (₩)" />
-          <button onclick="drawChart()">한눈에 확인</button>
-          <canvas id="budgetChart" width="300" height="300"></canvas>
-        </div>
-      `;
-    }
-
-    function drawChart() {
-      const total = parseInt(document.getElementById("totalBudget").value);
-      const used = parseInt(document.getElementById("usedBudget").value);
-      const remain = total - used;
-
-      if (chart) chart.destroy();
-
-      const ctx = document.getElementById('budgetChart').getContext('2d');
-      chart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: ['사용한 금액', '남은 금액'],
-          datasets: [{
-            data: [used, remain],
-            backgroundColor: ['#CE6969', '#83A2DB'],
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: 'bottom',
-              labels: {
-                font: {
-                  family: 'SUIT',
-                  size: 14
+<!-- 위의 <head>는 현재 캔버스 그대로 두고 -->
+  <body>
+    <aside class="side-menu">
+      <div class="pill-menu" onclick="showSpending()">
+        <img src="image/money2.png" alt="지출"> 지출
+      </div>
+      <div class="pill-menu">
+        <img src="image/emotion.png" alt="감정"> 감정
+      </div>
+      <div class="pill-menu" onclick="showBudget()">
+        <img src="image/budget.png" alt="예산"> 예산
+      </div>
+      <div class="pill-menu" onclick="showLunchMap()">
+        <img src="image/dish.png" alt="점메추"> 점메추
+      </div>
+    </aside>
+  
+    <main class="main-content" id="main"></main>
+  
+    <script>
+      function showBudget() {
+        document.getElementById("main").innerHTML = `
+          <div class="glass-box">
+            <h2>이번 달 예산</h2>
+            <input type="number" id="totalBudget" placeholder="총 예산 입력 (₩)" />
+            <input type="number" id="usedBudget" placeholder="사용한 금액 입력 (₩)" />
+            <button onclick="drawChart()">한눈에 확인</button>
+            <canvas id="budgetChart" width="300" height="300"></canvas>
+          </div>
+        `;
+      }
+  
+      function drawChart() {
+        const total = parseInt(document.getElementById("totalBudget").value);
+        const used = parseInt(document.getElementById("usedBudget").value);
+        const remain = total - used;
+  
+        const ctx = document.getElementById('budgetChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['사용한 금액', '남은 금액'],
+            datasets: [{
+              data: [used, remain],
+              backgroundColor: ['#CE6969', '#83A2DB'],
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: {
+                  font: {
+                    family: 'SUIT',
+                    size: 14
+                  }
                 }
               }
             }
           }
-        }
-      });
-    }
-
-    function showLunchMap() {
-      const today = new Date();
-      const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-      const remainingDays = lastDay.getDate() - today.getDate();
-      const totalBudget = 200000; // 예시 예산
-      const used = 100000;
-      const remaining = totalBudget - used;
-      const lunchBudget = Math.floor(remaining / (remainingDays * 2));
-
-      document.getElementById("main").innerHTML = `
-        <div class="glass-box">
-          <h2>점심 메뉴 추천 🍱</h2>
-          <p>1인당 점심 예산: 약 ₩${lunchBudget.toLocaleString()}원</p>
-          <div id="map"></div>
-        </div>
-      `;
-
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          const mapContainer = document.getElementById('map');
-
-          const mapOption = {
-            center: new kakao.maps.LatLng(lat, lng),
-            level: 4
-          };
-
-          const map = new kakao.maps.Map(mapContainer, mapOption);
-          const ps = new kakao.maps.services.Places();
-
-          ps.keywordSearch('맛집', function(data, status) {
-            if (status === kakao.maps.services.Status.OK) {
-              data.forEach(function(place) {
-                const price = Math.floor(Math.random() * 15000 + 5000);
-                if (price <= lunchBudget) {
-                  const marker = new kakao.maps.Marker({
-                    map: map,
-                    position: new kakao.maps.LatLng(place.y, place.x)
-                  });
-                  const infowindow = new kakao.maps.InfoWindow({
-                    content: `<div style='padding:5px;font-size:13px;'>${place.place_name}<br/>가격: ₩${price.toLocaleString()}</div>`
-                  });
-                  kakao.maps.event.addListener(marker, 'click', function() {
-                    infowindow.open(map, marker);
-                  });
-                }
-              });
-            }
-          }, {location: map.getCenter(), radius: 2000});
         });
       }
-    }
-  </script>
-</body>
-</html>
+  
+      function showLunchMap() {
+        const today = new Date();
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        const remainingDays = lastDay.getDate() - today.getDate();
+        const totalBudget = 200000;
+        const used = 100000;
+        const remaining = totalBudget - used;
+        const lunchBudget = Math.floor(remaining / (remainingDays * 2));
+  
+        document.getElementById("main").innerHTML = `
+          <div class="glass-box">
+            <h2>점심 메뉴 추천 🍱</h2>
+            <p>1인당 점심 예산: 약 ₩${lunchBudget.toLocaleString()}원</p>
+            <div id="map"></div>
+          </div>
+        `;
+  
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(function(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const mapContainer = document.getElementById('map');
+  
+            const map = new kakao.maps.Map(mapContainer, {
+              center: new kakao.maps.LatLng(lat, lng),
+              level: 4
+            });
+  
+            const ps = new kakao.maps.services.Places();
+            ps.keywordSearch('맛집', function(data, status) {
+              if (status === kakao.maps.services.Status.OK) {
+                data.forEach(function(place) {
+                  const price = Math.floor(Math.random() * 15000 + 5000);
+                  if (price <= lunchBudget) {
+                    const marker = new kakao.maps.Marker({
+                      map: map,
+                      position: new kakao.maps.LatLng(place.y, place.x)
+                    });
+                    const infowindow = new kakao.maps.InfoWindow({
+                      content: `<div style='padding:5px;font-size:13px;'>${place.place_name}<br/>가격: ₩${price.toLocaleString()}</div>`
+                    });
+                    kakao.maps.event.addListener(marker, 'click', function() {
+                      infowindow.open(map, marker);
+                    });
+                  }
+                });
+              }
+            }, {location: map.getCenter(), radius: 2000});
+          });
+        }
+      }
+  
+      function showSpending() {
+        document.getElementById("main").innerHTML = `
+          <div class="glass-row-2">
+            <div class="glass-col">
+              <h3>분야별 총 지출</h3>
+              <canvas id="categoryTotalChart"></canvas>
+            </div>
+            <div class="glass-col">
+              <h3>하루 지출 총합 변화</h3>
+              <canvas id="dailyTotalChart"></canvas>
+            </div>
+          </div>
+          <div class="glass-row-2">
+          <div class="glass-col" style="width: 100%;">
+            <h3>분야별 일별 지출 변화</h3>
+            <canvas id="categoryDailyChart"></canvas>
+          </div>
+        </div>
+        `;
+  
+        new Chart(document.getElementById("categoryTotalChart"), {
+          type: 'bar',
+          data: {
+            labels: ['식비', '교통', '쇼핑', '구독', '기타'],
+            datasets: [{
+              label: '지출 금액',
+              data: [45000, 12000, 38000, 10000, 15000],
+              backgroundColor: '#83A2DB',
+              borderRadius: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+          }
+        });
+  
+        new Chart(document.getElementById("dailyTotalChart"), {
+          type: 'line',
+          data: {
+            labels: ['5/1', '5/2', '5/3', '5/4', '5/5'],
+            datasets: [{
+              label: '총 지출 금액',
+              data: [20000, 35000, 28000, 22000, 31000],
+              backgroundColor: 'rgba(131, 162, 219, 0.3)',
+              borderColor: '#83A2DB',
+              tension: 0.4,
+              fill: true
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } },
+            scales: { y: { beginAtZero: true } }
+          }
+        });
+  
+        new Chart(document.getElementById("categoryDailyChart"), {
+          type: 'line',
+          data: {
+            labels: ['5/1', '5/2', '5/3', '5/4', '5/5'],
+            datasets: [
+              { label: '식비', data: [10000, 12000, 9000, 11000, 13000], borderColor: '#FF6384', fill: false },
+              { label: '교통', data: [3000, 2000, 2500, 2300, 2800], borderColor: '#36A2EB', fill: false },
+              { label: '쇼핑', data: [6000, 10000, 8000, 7000, 9000], borderColor: '#FFCE56', fill: false }
+            ]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } },
+            scales: { y: { beginAtZero: true } }
+          }
+        });
+      }
+    </script>
+  </body>
+  </html>
+  
