@@ -1,4 +1,3 @@
-<!-- ✅ 스타일 유지 + 점메추, 예산, 지출 완전 통합 버전 (예산/점메추는 폭 복원) -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -13,7 +12,13 @@
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=YOUR_KAKAO_API_KEY_HERE&libraries=services"></script>
+  <script src="apikey.js"></script>
+  <script>
+    const script = document.createElement('script');
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_API_KEY}&libraries=services`;
+    script.defer = true;
+    document.head.appendChild(script);
+  </script>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -64,6 +69,7 @@
       align-items: center;
       overflow-y: auto;
       gap: 20px;
+      margin-top: 80px;
     }
     .glass-box {
       max-width: 600px;
@@ -101,13 +107,12 @@
     }
   </style>
 </head>
-<!-- 위의 <head>는 현재 캔버스 그대로 두고 -->
   <body>
     <aside class="side-menu">
       <div class="pill-menu" onclick="showSpending()">
         <img src="image/money2.png" alt="지출"> 지출
       </div>
-      <div class="pill-menu">
+      <div class="pill-menu" onclick="showEmotion()">
         <img src="image/emotion.png" alt="감정"> 감정
       </div>
       <div class="pill-menu" onclick="showBudget()">
@@ -237,6 +242,7 @@
           </div>
         </div>
         `;
+        
   
         new Chart(document.getElementById("categoryTotalChart"), {
           type: 'bar',
@@ -293,6 +299,29 @@
           }
         });
       }
+      
+      function showEmotion() {
+        fetch("https://cors-anywhere.herokuapp.com/https://zenquotes.io/api/random")
+        .then(res => res.json())
+        .then(data => {
+          const quote = data[0].q;
+          const author = data[0].a;
+          document.getElementById("main").innerHTML = `
+            <div class="glass-box">
+              <h2>오늘의 긍정 문구 🌼</h2>
+              <p style="font-size: 18px;">"${quote}"</p>
+              <p style="font-size: 14px; color: gray;">— ${author}</p>
+            </div>
+          `;
+        })
+        .catch(error => {
+          console.error("긍정 문구 로딩 실패:", error);
+        });
+      }
+
+
+
+
     </script>
   </body>
   </html>
