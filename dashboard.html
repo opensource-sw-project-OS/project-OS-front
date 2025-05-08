@@ -1,0 +1,242 @@
+<!-- ✅ 기존 스타일을 유지하면서 점메추 및 예산 기능 모두 포함된 버전 -->
+<!-- 지도용 카카오 API Key 필요: 아래 YOUR_KAKAO_API_KEY_HERE 부분에 실제 키 입력 -->
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>대시보드 + 예산 + 점메추</title>
+
+  <!-- SUIT 폰트 -->
+  <style>
+    @font-face {
+      font-family: 'SUIT';
+      font-style: normal;
+      font-weight: 400;
+      src: url('https://cdn.jsdelivr.net/gh/sunn-us/SUIT/fonts/static/woff2/SUIT-Regular.woff2') format('woff2');
+    }
+  </style>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- 카카오 맵 API -->
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=YOUR_KEY_HERE&libraries=services"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'SUIT', sans-serif;
+      display: flex;
+      height: 100vh;
+      background: linear-gradient(to bottom, #d7dadd 0%, #c4c9d6 60%, #b0c4db 100%);
+    }
+
+    .side-menu {
+      width: 220px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 100px 0;
+      gap: 20px;
+    }
+
+    .pill-menu {
+      margin-top: 13px;
+      margin-left: 100px;
+      display: flex;
+      align-items: center;
+      gap: 30px;
+      background: rgba(255, 255, 255, 0.3);
+      width: 200px;
+      padding: 12px 25px;
+      border-radius: 9999px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      color: #333;
+      font-size: 17px;
+      font-weight: 600;
+      transition: background 0.2s;
+      cursor: pointer;
+      justify-content: flex-start;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .pill-menu:hover {
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    .pill-menu img {
+      margin-left: 20px;
+      width: 33px;
+      height: 33px;
+      flex-shrink: 0;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .glass-box {
+      width: 600px;
+      height: auto;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 20px;
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      text-align: center;
+    }
+
+    .glass-box input {
+      width: 80%;
+      padding: 10px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+
+    canvas {
+      margin-top: 20px;
+    }
+
+    #map {
+      width: 100%;
+      height: 400px;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <aside class="side-menu">
+    <div class="pill-menu">
+      <img src="image/money2.png" alt="지출"> 지출
+    </div>
+    <div class="pill-menu">
+      <img src="image/emotion.png" alt="감정"> 감정
+    </div>
+    <div class="pill-menu" onclick="showBudget()">
+      <img src="image/budget.png" alt="예산"> 예산
+    </div>
+    <div class="pill-menu" onclick="showLunchMap()">
+      <img src="image/dish.png" alt="점메추"> 점메추
+    </div>
+  </aside>
+
+  <main class="main-content" id="main"></main>
+
+  <script>
+    let chart;
+
+    function showBudget() {
+      document.getElementById("main").innerHTML = `
+        <div class="glass-box">
+          <h2>이번 달 예산</h2>
+          <input type="number" id="totalBudget" placeholder="총 예산 입력 (₩)" />
+          <input type="number" id="usedBudget" placeholder="사용한 금액 입력 (₩)" />
+          <button onclick="drawChart()">한눈에 확인</button>
+          <canvas id="budgetChart" width="300" height="300"></canvas>
+        </div>
+      `;
+    }
+
+    function drawChart() {
+      const total = parseInt(document.getElementById("totalBudget").value);
+      const used = parseInt(document.getElementById("usedBudget").value);
+      const remain = total - used;
+
+      if (chart) chart.destroy();
+
+      const ctx = document.getElementById('budgetChart').getContext('2d');
+      chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['사용한 금액', '남은 금액'],
+          datasets: [{
+            data: [used, remain],
+            backgroundColor: ['#CE6969', '#83A2DB'],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                font: {
+                  family: 'SUIT',
+                  size: 14
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function showLunchMap() {
+      const today = new Date();
+      const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      const remainingDays = lastDay.getDate() - today.getDate();
+      const totalBudget = 200000; // 예시 예산
+      const used = 100000;
+      const remaining = totalBudget - used;
+      const lunchBudget = Math.floor(remaining / (remainingDays * 2));
+
+      document.getElementById("main").innerHTML = `
+        <div class="glass-box">
+          <h2>점심 메뉴 추천 🍱</h2>
+          <p>1인당 점심 예산: 약 ₩${lunchBudget.toLocaleString()}원</p>
+          <div id="map"></div>
+        </div>
+      `;
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          const mapContainer = document.getElementById('map');
+
+          const mapOption = {
+            center: new kakao.maps.LatLng(lat, lng),
+            level: 4
+          };
+
+          const map = new kakao.maps.Map(mapContainer, mapOption);
+          const ps = new kakao.maps.services.Places();
+
+          ps.keywordSearch('맛집', function(data, status) {
+            if (status === kakao.maps.services.Status.OK) {
+              data.forEach(function(place) {
+                const price = Math.floor(Math.random() * 15000 + 5000);
+                if (price <= lunchBudget) {
+                  const marker = new kakao.maps.Marker({
+                    map: map,
+                    position: new kakao.maps.LatLng(place.y, place.x)
+                  });
+                  const infowindow = new kakao.maps.InfoWindow({
+                    content: `<div style='padding:5px;font-size:13px;'>${place.place_name}<br/>가격: ₩${price.toLocaleString()}</div>`
+                  });
+                  kakao.maps.event.addListener(marker, 'click', function() {
+                    infowindow.open(map, marker);
+                  });
+                }
+              });
+            }
+          }, {location: map.getCenter(), radius: 2000});
+        });
+      }
+    }
+  </script>
+</body>
+</html>
