@@ -1,7 +1,29 @@
 # 💻project-OS-front💻
-#### fork 후 test branch에서 commit하고 Pull Request
+#### 👩‍💻 fork 후 test branch에서 commit하고 Pull Request
+
+<br><br>
+
+---
+
+
+## 📎 front-end 사용 오픈소스 목록 
+
+🔖 **Three.js** 감정 캐릭터를 3D로 시각화하기 위한 WebGL 라이브러리 - 따로 glb 파일 다운받아 해당 오픈소스로 3D 캐릭터 표시
+
+🔖 **GLTFLoader / OrbitControls** Three.js에서 제공하는 3D 모델 로딩 및 카메라 컨트롤 기능
+
+🔖 **Chart.js** 지출 데이터를 시각화하기 위한 차트 라이브러리
+
+🔖 **affirmations** 사용자에게 긍정 문구 출력
+
+🔖 (**SUIT 웹폰트** UI 텍스트에 적용 한글 폰트)
+
+🔖 **[백엔드 구현 전 임시] CORS Anywhere** 외부 API 호출 시 CORS 우회를 위한 오픈소스 프록시 사용
+
+---
 <br>
 
+# 📝 Project frond-end log 
 ### 2025-05-04
 - 웹사이트 intro 페이지 (project_os_intro.html) 추가
 <br>
@@ -33,3 +55,11 @@
 - 감정 기능 추가
   - Three.js를 이용하여 사용자의 감정에 맞는 캐릭터 표시
   - Affirmations를 이용하여 긍정 문구 기능 추가
+ 
+<br><br>
+---
+
+
+
+
+
