@@ -94,7 +94,18 @@
       backdrop-filter: blur(15px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     }
+
+    .glass-wrapper {
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
     canvas {
+      
       margin-top: 20px;
       background: transparent;
       border-radius: 10px;
@@ -106,6 +117,11 @@
       margin-top: 20px;
     }
   </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/examples/js/controls/OrbitControls.js"></script>
+  
 </head>
   <body>
     <aside class="side-menu">
@@ -250,7 +266,7 @@
             labels: ['식비', '교통', '쇼핑', '구독', '기타'],
             datasets: [{
               label: '지출 금액',
-              data: [45000, 12000, 38000, 10000, 15000],
+              data: [60000, 11500, 38500, 10000, 15000],
               backgroundColor: '#83A2DB',
               borderRadius: 8
             }]
@@ -268,7 +284,7 @@
             labels: ['5/1', '5/2', '5/3', '5/4', '5/5'],
             datasets: [{
               label: '총 지출 금액',
-              data: [20000, 35000, 28000, 22000, 31000],
+              data: [19000, 15000, 19500, 13000, 34500],
               backgroundColor: 'rgba(131, 162, 219, 0.3)',
               borderColor: '#83A2DB',
               tension: 0.4,
@@ -287,9 +303,10 @@
           data: {
             labels: ['5/1', '5/2', '5/3', '5/4', '5/5'],
             datasets: [
-              { label: '식비', data: [10000, 12000, 9000, 11000, 13000], borderColor: '#FF6384', fill: false },
-              { label: '교통', data: [3000, 2000, 2500, 2300, 2800], borderColor: '#36A2EB', fill: false },
-              { label: '쇼핑', data: [6000, 10000, 8000, 7000, 9000], borderColor: '#FFCE56', fill: false }
+              { label: '식비', data: [10000, 12000, 9000, 6000, 23000], borderColor: '#FF6384', fill: false },
+              { label: '교통', data: [3000, 2000, 2500, 1500, 2500], borderColor: '#36A2EB', fill: false },
+              { label: '쇼핑', data: [6000, 10000, 8000, 5500, 9000], borderColor: '#FFCE56', fill: false },
+              
             ]
           },
           options: {
@@ -300,24 +317,200 @@
         });
       }
       
+      let scene, camera, renderer, model,controls;
+
       function showEmotion() {
-        fetch("https://cors-anywhere.herokuapp.com/https://zenquotes.io/api/random")
-        .then(res => res.json())
-        .then(data => {
-          const quote = data[0].q;
-          const author = data[0].a;
-          document.getElementById("main").innerHTML = `
-            <div class="glass-box">
-              <h2>오늘의 긍정 문구 🌼</h2>
-              <p style="font-size: 18px;">"${quote}"</p>
-              <p style="font-size: 14px; color: gray;">— ${author}</p>
+        document.getElementById("main").innerHTML = `
+          <div class="glass-row-2" style="max-width: 800px; width: 100%;">
+            <div class="glass-col" style="flex: 1;">
+              <h3>감정을 입력하세요</h3>
+              <input type="text" id="emotionInput" placeholder="행복, 슬픔, 불안, 분노"
+                style="width: 100%; padding: 10px; border-radius: 8px;" />
+              <button onclick="loadEmotionModel()" 
+                style="margin-top:10px; padding:8px 16px; border:none; background:#83A2DB; color:white; border-radius:8px;">
+                적용
+              </button>
             </div>
-          `;
-        })
-        .catch(error => {
-          console.error("긍정 문구 로딩 실패:", error);
-        });
+            <div class="glass-col" style="flex: 1;">
+              <h3>감정 캐릭터</h3>
+              <canvas id="threeCanvas" style="width: 100%; height: 300px;"></canvas>
+            </div>
+          </div>
+
+          <div class="glass-box" id="affirmationBox" style="max-width: 800px;">
+            긍정 문구 불러오는 중...
+          </div>
+        `;
+
+        init3D();
+        loadAffirmation();
       }
+
+
+
+
+    function init3D() {
+      const canvas = document.getElementById('threeCanvas');
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+      camera.position.set(0, 1.5,80);  // 멀리서 보기
+
+      renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setClearColor(0x000000, 0);  // 투명 배경
+
+      // 조명
+      const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+      directionalLight.position.set(5, 10, 7.5);
+      scene.add(ambientLight, directionalLight);
+
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enablePan = false;
+      controls.enableZoom = false;
+      controls.target.set(0, 0, 0);  // 모델 중심
+      controls.update();
+
+
+      // 리사이즈 대응
+      window.addEventListener('resize', () => {
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+      });
+
+      animate(); // 애니메이션 시작
+    }
+
+    function loadEmotionModel() {
+      const input = document.getElementById("emotionInput").value.trim();
+      const map = {
+        '행복': 'happy.glb',
+        '슬픔': 'sad.glb',
+        '불안': 'anxious.glb',
+        '분노': 'angry.glb'
+      };
+      const fileName = map[input];
+      if (!fileName) {
+        alert("감정은 '행복', '슬픔', '불안', '분노' 중에서 입력해주세요.");
+        return;
+      }
+
+      const loader = new THREE.GLTFLoader();
+      loader.load(`models/${fileName}`, (gltf) => {
+      if (model) scene.remove(model);
+
+      model = gltf.scene;
+
+      // 크기와 위치 조정
+      model.scale.set(0.06,0.06,0.06);   // 캐릭터 사이즈 조절
+      model.position.set(0, -30, 0);   // 아래로
+
+      model.rotation.y = 0; // 캐릭터가 앞을 보도록
+
+      // 모델 내부 구조 확인
+      model.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          console.log("Mesh:", child.name);
+        }
+      });
+
+      scene.add(model);
+      console.log("모델 씬에 추가");
+      });
+
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (model) model.rotation.y += 0.005;  // 천천히 회전
+      if (controls) controls.update();  // 마우스 회전 적용
+
+      renderer.render(scene, camera);
+    }
+
+
+    // function loadAffirmation() {
+    //   fetch("https://cors-anywhere.herokuapp.com/https://zenquotes.io/api/random")
+    //     .then(res => res.json())
+    //     .then(data => {
+    //       const quote = data[0].q;
+    //       const author = data[0].a;
+    //       document.getElementById("affirmationBox").innerHTML = `
+    //         <h2>오늘의 긍정 문구 🌼</h2>
+    //         <p style="font-size:18px;">"${quote}"</p>
+    //         <p style="font-size:14px;color:gray;">— ${author}</p>
+    //       `;
+    //     })
+    //     .catch(err => {
+    //       document.getElementById("affirmationBox").innerHTML = `<p>긍정 문구를 불러오지 못했습니다.</p>`;
+    //     });
+    // }
+
+
+    // affirmation.js
+    async function loadAffirmation() {
+      try {
+        const res = await fetch("https://cors-anywhere.herokuapp.com/https://www.affirmations.dev/");
+        if (!res.ok) throw new Error("리소스 요청 실패");
+
+        const data = await res.json();
+        const quote = data.affirmation;
+
+        document.getElementById("affirmationBox").innerHTML = `
+          <h2>오늘의 긍정 문구 🌼</h2>
+          <p style="font-size:18px;">"${quote}"</p>
+        `;
+      } catch (err) {
+        document.getElementById("affirmationBox").innerHTML = `<p>긍정 문구를 불러오지 못했습니다.</p>`;
+        console.error("오류 발생:", err);
+      }
+    }
+
+
+    //     async function loadAffirmation() {
+//   try {
+//     // 1. 긍정 문구 가져오기 (영어)
+//     const res = await fetch("https://cors-anywhere.herokuapp.com/https://www.affirmations.dev/");
+//     if (!res.ok) throw new Error("리소스 요청 실패");
+
+//     const data = await res.json();
+//     const quote = data.affirmation;
+
+//     // 2. 영어 문구를 한국어로 번역 (LibreTranslate API 사용)
+//     const translateRes = await fetch("https://cors-anywhere.herokuapp.com/https://libretranslate.de/translate", {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json"
+//       },
+//       body: JSON.stringify({
+//         q: quote,
+//         source: "en",
+//         target: "ko",
+//         format: "text"
+//       })
+//     });
+
+//     const translatedData = await translateRes.json();
+//     const translated = translatedData.translatedText;
+
+//     // 3. HTML에 출력
+//     document.getElementById("affirmationBox").innerHTML = `
+//       <h2>오늘의 긍정 문구 🌼</h2>
+//       <p style="font-size:18px;">"${quote}"</p>
+//       <p style="font-size:14px; color:gray;">→ ${translated}</p>
+//     `;
+//   } catch (err) {
+//     document.getElementById("affirmationBox").innerHTML = `<p>긍정 문구를 불러오지 못했습니다.</p>`;
+//     console.error("오류 발생:", err);
+//   }
+// }
+
 
 
 
