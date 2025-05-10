@@ -67,7 +67,7 @@
       align-items: center;
       gap: 30px;
       background: rgba(255, 255, 255, 0.3);
-      width: 200px;
+      width: 250px;
       padding: 12px 25px;
       border-radius: 9999px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
@@ -140,6 +140,13 @@
       border-radius: 10px;
       margin-top: 20px;
     }
+    #preview, #croppedResult {
+      max-width: 100%;
+      max-height: 250px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      display: none;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="apikey.js"></script>
@@ -150,10 +157,13 @@
     document.head.appendChild(script);
   </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/examples/js/controls/OrbitControls.js"></script>
-  
+  <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+ 
 </head>
   <body>
     <header>
@@ -161,8 +171,11 @@
       
     </header>
     <aside class="side-menu">
+      <div class="pill-menu" onclick="showReceiptInput()">
+        <img src="image/money2.png" alt="지출입력"> 지출 입력
+      </div>
       <div class="pill-menu" onclick="showSpending()">
-        <img src="image/money2.png" alt="지출"> 지출
+        <img src="image/graph.png" alt="지출 그래프"> 지출 그래프
       </div>
       <div class="pill-menu" onclick="showEmotion()">
         <img src="image/emotion.png" alt="감정"> 감정
@@ -178,13 +191,113 @@
     <main class="main-content" id="main"></main>
   
     <script>
+       function showReceiptInput() {
+      document.getElementById("main").innerHTML = `
+        <div class="glass-row-2">
+          <div class="glass-col">
+            <h3>사진 업로드 및 분석</h3>
+            <input type="file" id="upload" accept="image/*" / >
+            <img id="preview" />
+            <img id="croppedResult" />
+            <br>
+            <label>분야 선택:</label>
+            <select id="category">
+              <option value="식비">식비</option>
+              <option value="교통">교통</option>
+              <option value="쇼핑">쇼핑</option>
+              <option value="구독">구독</option>
+              <option value="기타">기타</option>
+            </select>
+            <br><br>
+            <button id="confirmCrop"  style="margin-top:10px; padding:8px 16px; border:none; background:#83A2DB; color:white; border-radius:8px;"> 크롭 </button>
+            <button onclick="runOCR()" style="margin-top:10px; padding:8px 16px; border:none; background:#83A2DB; color:white; border-radius:8px;"> OCR 실행 </button>
+          </div>
+          <div class="glass-col" >
+            <h3> OCR 결과</h3>
+            <div id="result">OCR 결과 영역</div>
+          </div>
+        </div>
+        <div class="glass-row-2">
+          <div class="glass-col" style="width: 100%;">
+            <h3>날짜 / 금액 추출</h3>
+          <div id="extracted">날짜 : <br>금액 :
+          </div>
+      
+        </div>`;
+
+      const upload = document.getElementById('upload');
+      const preview = document.getElementById('preview');
+      const croppedResult = document.getElementById('croppedResult');
+      const result = document.getElementById('result');
+      const extracted = document.getElementById('extracted');
+      let cropper = null;
+      let croppedBlob = null;
+
+      upload.addEventListener('change', () => {
+        const file = upload.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          preview.src = reader.result;
+          preview.style.display = 'block';
+          croppedResult.style.display = 'none';
+          if (cropper) cropper.destroy();
+          cropper = new Cropper(preview, {
+            aspectRatio: NaN,
+            viewMode: 1
+          });
+        };
+        reader.readAsDataURL(file);
+      });
+
+      document.getElementById('confirmCrop').addEventListener('click', () => {
+        if (!cropper) return;
+        const canvas = cropper.getCroppedCanvas();
+        canvas.toBlob(blob => {
+          croppedBlob = blob;
+          croppedResult.src = URL.createObjectURL(blob);
+          croppedResult.style.display = 'block';
+          preview.style.display = 'none';
+          cropper.destroy();
+          cropper = null;
+        }, 'image/png');
+      });
+
+      window.runOCR = function() {
+        if (!croppedBlob) {
+          alert("크롭 후 버튼을 눌러주세요");
+          return;
+        }
+        result.innerText = "OCR 인식 중...";
+        extracted.innerText = "추출 중...";
+        Tesseract.recognize(
+          croppedBlob,
+          'kor',
+          {
+            langPath: 'https://tessdata.projectnaptha.com/4.0.0/',
+            logger: m => console.log(m)
+          }
+        ).then(({ data: { text } }) => {
+          result.innerText = text;
+          const dateMatch = text.match(/\d{4}[.\-/]\d{1,2}[.\-/]\d{1,2}/);
+          const date = dateMatch ? dateMatch[0] : '날짜 미인식';
+          const totalMatch = text.match(/(합계|총액|총합계)[^\d]*(₩?\s?\d{1,3}(,\d{3})*(원)?)/);
+          const amount = totalMatch ? totalMatch[2] : '금액 미인식';
+          extracted.innerHTML = `날짜 : ${date}<br>합계 금액 : ${amount}`;
+        }).catch(err => {
+          result.innerText = `오류 발생: ${err.message}`;
+          extracted.innerText = '추출 실패';
+        });
+      }
+    }
+
       function showBudget() {
         document.getElementById("main").innerHTML = `
           <div class="glass-box">
             <h2>이번 달 예산</h2>
             <input type="number" id="totalBudget" placeholder="총 예산 입력 (₩)" />
             <input type="number" id="usedBudget" placeholder="사용한 금액 입력 (₩)" />
-            <button onclick="drawChart()">한눈에 확인</button>
+            <button onclick="drawChart()" style="margin-top:10px; padding:8px 16px; border:none; background:#83A2DB; color:white; border-radius:8px;">한눈에 확인</button>
             <canvas id="budgetChart" width="300" height="300"></canvas>
           </div>
         `;
