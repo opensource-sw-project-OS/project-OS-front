@@ -35,7 +35,7 @@
 
     .title{
             white-space: nowrap;
-            font-size:20px;
+            font-size:22px;
             font-weight: bold;
         }
     @font-face {
@@ -150,12 +150,18 @@
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="apikey.js"></script>
-  <script>
-    const script = document.createElement('script');
-    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_API_KEY}&libraries=services`;
-    script.defer = true;
-    document.head.appendChild(script);
-  </script>
+<script>
+  // GOOGLE_API_KEY 변수가 전역(global)으로 등록됨
+  console.log(GOOGLE_API_KEY);
+
+  const script = document.createElement('script');
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_API_KEY}&libraries=places`;
+  script.async = true;
+  script.defer = true;
+  document.head.appendChild(script);
+</script>
+
+
 
   <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/examples/js/loaders/GLTFLoader.js"></script>
@@ -337,56 +343,31 @@
       }
   
       function showLunchMap() {
-        const today = new Date();
-        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-        const remainingDays = lastDay.getDate() - today.getDate();
-        const totalBudget = 200000;
-        const used = 100000;
-        const remaining = totalBudget - used;
-        const lunchBudget = Math.floor(remaining / (remainingDays * 2));
-  
-        document.getElementById("main").innerHTML = `
-          <div class="glass-box">
-            <h2>점심 메뉴 추천 🍱</h2>
-            <p>1인당 점심 예산: 약 ₩${lunchBudget.toLocaleString()}원</p>
-            <div id="map"></div>
-          </div>
-        `;
-  
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(function(position) {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            const mapContainer = document.getElementById('map');
-  
-            const map = new kakao.maps.Map(mapContainer, {
-              center: new kakao.maps.LatLng(lat, lng),
-              level: 4
-            });
-  
-            const ps = new kakao.maps.services.Places();
-            ps.keywordSearch('맛집', function(data, status) {
-              if (status === kakao.maps.services.Status.OK) {
-                data.forEach(function(place) {
-                  const price = Math.floor(Math.random() * 15000 + 5000);
-                  if (price <= lunchBudget) {
-                    const marker = new kakao.maps.Marker({
-                      map: map,
-                      position: new kakao.maps.LatLng(place.y, place.x)
-                    });
-                    const infowindow = new kakao.maps.InfoWindow({
-                      content: `<div style='padding:5px;font-size:13px;'>${place.place_name}<br/>가격: ₩${price.toLocaleString()}</div>`
-                    });
-                    kakao.maps.event.addListener(marker, 'click', function() {
-                      infowindow.open(map, marker);
-                    });
-                  }
-                });
-              }
-            }, {location: map.getCenter(), radius: 2000});
-          });
-        }
-      }
+    const lunchBudget = 8000; // 예시 값
+
+    document.getElementById("main").innerHTML = `
+      <div class="glass-box">
+        <h2>점심 메뉴 추천 🍱</h2>
+        <p>1인당 점심 예산: 약 ₩${lunchBudget.toLocaleString()}원</p>
+        <div id="map" style="width:100%; height:400px; border-radius:10px;"></div>
+      </div>
+    `;
+
+    const dankookDujon = { lat: 37.321877, lng: 127.126471 };
+
+    const map = new google.maps.Map(document.getElementById("map"), {
+      center: dankookDujon,
+      zoom: 15,
+    });
+
+    // 예시 마커 (단국대 위치)
+    new google.maps.Marker({
+      map,
+      position: dankookDujon,
+      title: "단국대학교 죽전캠퍼스",
+    });
+  }
+
   
       function showSpending() {
         document.getElementById("main").innerHTML = `
@@ -467,7 +448,7 @@
       }
       
       let scene, camera, renderer, model,controls;
-
+    
       function showEmotion() {
         document.getElementById("main").innerHTML = `
           <div class="glass-row-2" style="max-width: 800px; width: 100%;">
@@ -486,14 +467,14 @@
             </div>
           </div>
 
-          <div class="glass-box" id="affirmationBox" style="max-width: 800px;">
-            긍정 문구 불러오는 중...
+          <!-- 긍정 문구 박스는 처음엔 비워두고 나중에 조건에 따라 삽입 -->
+          <div class="glass-box" id="affirmationBox" style="max-width: 800px; display: none;">
           </div>
         `;
 
-        init3D();
-        loadAffirmation();
+        init3D(); // 3D 설정
       }
+
 
 
 
@@ -556,7 +537,7 @@
 
       // 크기와 위치 조정
       model.scale.set(0.06,0.06,0.06);   // 캐릭터 사이즈 조절
-      model.position.set(0, -30, 0);   // 아래로
+      model.position.set(0, -20, 0);   // 아래로
 
       model.rotation.y = 0; // 캐릭터가 앞을 보도록
 
@@ -572,6 +553,25 @@
       scene.add(model);
       console.log("모델 씬에 추가");
       });
+
+    // 감정에 따라 긍정 문구 박스를 보여주기
+      const negativeEmotions = ['슬픔', '분노', '불안'];
+      if (negativeEmotions.includes(input)) {
+        document.getElementById("affirmationBox").style.display = "block";
+
+        document.getElementById("affirmationBox").innerHTML = `
+          <div class="glass-box" id="affirmationBox" style="width: 100%; style="max-width: 800px;">
+            긍정 문구 불러오는 중...
+          </div>
+      `;
+
+        loadAffirmation();
+      } else {
+        document.getElementById("affirmationBox").style.display = "none";
+        document.getElementById("affirmationBox").innerHTML = '';
+      }
+
+
 
     }
 
