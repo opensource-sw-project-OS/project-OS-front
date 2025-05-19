@@ -1,5 +1,14 @@
 # 💻project-OS-front💻
-#### 👩‍💻 fork 후 test branch에서 commit하고 Pull Request
+#### 👩‍💻 프로젝트 초반 : fork 후 test branch에서 commit하고 Pull Request
+- 초반에는 간단한 구조이므로 fork 방식으로 진행
+  
+#### 👩‍💻 프로젝트 후반 : 기능 브랜치 따로 작업 후 dev에 merge, 최종적으로 main에 merge
+- 후반에는 기능, 페이지가 많아지고 백엔드 연동 등 복잡도가 올라가여 브랜치 전략을 기능 단위 개발 및 테스트가 더 수월한 구조로 전환
+- (작업을 진행하며 불편함을 느껴 기존 방식보다 실무적인 방식으로 구조 개선)
+- ex)  [main] ← [dev] ← [feat/login], [feat/signup] 등 
+  - main: 배포 가능 상태
+  - dev: 테스트 및 feat 조립
+  - feat/*: 기능 단위 개발 -> 버그 원인 파악, 롤백 용이
 
 <br><br>
 
@@ -72,13 +81,20 @@
 - 지출 입력 기능 추가
   - 사진 업로드 후 ocr -> 한글 인식 보완 예정
   - Cropper.js를 이용하여 이미지 업로드 후 크롭 기능 추가
-<br><br>
+
+<br>
 
 ### 2025-05-13
 - 메뉴 추천 기능
   - Google Maps API 추가
 - 감정 기능
   - 긍정 문구 출력 조건 추가 (부정적인 감정일 때만 출력)
+ 
+><br>
+
+### 2025-05-19
+- feat/login : 로그인 페이지 추가
+- feat/signup : 회원가입 페이지 추가
 ---
 
 
