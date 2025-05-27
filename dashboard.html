@@ -178,10 +178,10 @@
     </header>
     <aside class="side-menu">
       <div class="pill-menu" onclick="showReceiptInput()">
-        <img src="image/money2.png" alt="지출입력"> 지출 입력
+        <img src="image/money2.png" alt="입력"> 입력
       </div>
       <div class="pill-menu" onclick="showSpending()">
-        <img src="image/graph.png" alt="지출 그래프"> 지출 그래프
+        <img src="image/graph.png" alt="그래프"> 그래프
       </div>
       <div class="pill-menu" onclick="showEmotion()">
         <img src="image/emotion.png" alt="감정"> 감정
@@ -422,84 +422,258 @@
     });
   }
 
+  function showSpending() {
+  document.getElementById("main").innerHTML = `
+    <div class="glass-box">
+      <h2></h2>
+      <select id="chartSelector" style="padding: 8px 16px; margin-bottom: 20px; border-radius: 8px;">
+        <option value="emotionTotal">감정별 지출 총액</option>
+        <option value="dailyEmotion">일별 감정별 지출</option>
+        <option value="dailyTotal">일별 지출</option>
+        <option value="categoryTotal">카테고리별 지출</option>
+      </select>
+      <canvas id="spendingChart" height="300"></canvas>
+    </div>
+  `;
+
+  const ctx = document.getElementById("spendingChart").getContext("2d");
+  let chart;
+
+  document.getElementById("chartSelector").addEventListener("change", drawSelectedChart);
+
+  function drawSelectedChart() {
+    const selected = document.getElementById("chartSelector").value;
+    if (chart) chart.destroy();
+
+    switch (selected) {
+      case "emotionTotal":
+        drawEmotionTotalChart(); break;
+      case "dailyEmotion":
+        drawDailyEmotionChart(); break;
+      case "dailyTotal":
+        drawDailySpendingChart(); break;
+      case "categoryTotal":
+        drawCategoryChart(); break;
+    }
+  }
+
+  function drawEmotionTotalChart() {
+    const data = [
+      { emotion: "슬픔", value: 55000 },
+      { emotion: "보통", value: 25000 },
+      { emotion: "분노", value: 10000 },
+      { emotion: "기쁨", value: 7000 }
+    ];
+    const total = data.reduce((sum, item) => sum + item.value, 0);
+    const labels = data.map(d => d.emotion);
+    const values = data.map(d => d.value);
+    const percents = data.map(d => Math.round((d.value / total) * 100));
+
+    chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: '지출 총액',
+          data: values,
+          backgroundColor: ['#83A2DB', '#84d9c0', '#ff7aa2', '#f7c873'],
+          borderRadius: 10
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: function(ctx) {
+                return `₩${ctx.raw.toLocaleString()} (${percents[ctx.dataIndex]}%)`;
+              }
+            }
+          },
+          legend: { display: false }
+        },
+        scales: {
+          x: { beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  function drawDailyEmotionChart() {
+    const data = [
+      { date: "5/25", emotion: "슬픔", value: 50000 },
+      { date: "5/26", emotion: "불안", value: 30000 },
+      { date: "5/27", emotion: "기쁨", value: 20000 }
+    ];
+    chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: data.map(d => d.date),
+        datasets: [{
+          label: '일별 감정별 지출',
+          data: data.map(d => d.value),
+          fill: false,
+          borderColor: '#83A2DB',
+          tension: 0.3
+        }]
+      },
+      options: {
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: function(ctx) {
+                const item = data[ctx.dataIndex];
+                return `날짜: ${item.date}, 그날의 감정: ${item.emotion}, 지출: ₩${item.value.toLocaleString()}`;
+              }
+            }
+          },
+          legend: { display: false }
+        },
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  function drawDailySpendingChart() {
+    const data = [
+      { date: "5/25", value: 40000 },
+      { date: "5/26", value: 60000 },
+      { date: "5/27", value: 35000 }
+    ];
+    chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: data.map(d => d.date),
+        datasets: [{
+          label: '하루 지출',
+          data: data.map(d => d.value),
+          backgroundColor: '#83A2DB',
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  function drawCategoryChart() {
+    const data = [
+      { category: "식비", value: 30000 },
+      { category: "쇼핑", value: 20000 },
+      { category: "교통", value: 10000 }
+    ];
+    chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: data.map(d => d.category),
+        datasets: [{
+          label: '카테고리별 지출',
+          data: data.map(d => d.value),
+          backgroundColor: '#83A2DB',
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  drawSelectedChart();
+}
   
-      function showSpending() {
-        document.getElementById("main").innerHTML = `
-          <div class="glass-row-2">
-            <div class="glass-col">
-              <h3>분야별 총 지출</h3>
-              <canvas id="categoryTotalChart"></canvas>
-            </div>
-            <div class="glass-col">
-              <h3>하루 지출 총합 변화</h3>
-              <canvas id="dailyTotalChart"></canvas>
-            </div>
-          </div>
-          <div class="glass-row-2">
-          <div class="glass-col" style="width: 100%;">
-            <h3>분야별 일별 지출 변화</h3>
-            <canvas id="categoryDailyChart"></canvas>
-          </div>
-        </div>
-        `;
+      // function showSpending() {
+      //   document.getElementById("main").innerHTML = `
+      //     <div class="glass-row-2">
+      //       <div class="glass-col">
+      //         <h3>분야별 총 지출</h3>
+      //         <canvas id="categoryTotalChart"></canvas>
+      //       </div>
+      //       <div class="glass-col">
+      //         <h3>하루 지출 총합 변화</h3>
+      //         <canvas id="dailyTotalChart"></canvas>
+      //       </div>
+      //     </div>
+      //     <div class="glass-row-2">
+      //     <div class="glass-col" style="width: 100%;">
+      //       <h3>분야별 일별 지출 변화</h3>
+      //       <canvas id="categoryDailyChart"></canvas>
+      //     </div>
+      //   </div>
+      //   `;
         
   
-        new Chart(document.getElementById("categoryTotalChart"), {
-          type: 'bar',
-          data: {
-            labels: ['식비', '교통', '쇼핑', '구독', '기타'],
-            datasets: [{
-              label: '지출 금액',
-              data: [60000, 11500, 38500, 10000, 15000],
-              backgroundColor: '#83A2DB',
-              borderRadius: 8
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true } }
-          }
-        });
+      //   new Chart(document.getElementById("categoryTotalChart"), {
+      //     type: 'bar',
+      //     data: {
+      //       labels: ['식비', '교통', '쇼핑', '구독', '기타'],
+      //       datasets: [{
+      //         label: '지출 금액',
+      //         data: [60000, 11500, 38500, 10000, 15000],
+      //         backgroundColor: '#83A2DB',
+      //         borderRadius: 8
+      //       }]
+      //     },
+      //     options: {
+      //       responsive: true,
+      //       plugins: { legend: { display: false } },
+      //       scales: { y: { beginAtZero: true } }
+      //     }
+      //   });
   
-        new Chart(document.getElementById("dailyTotalChart"), {
-          type: 'line',
-          data: {
-            labels: ['5/1', '5/2', '5/3', '5/4', '5/5'],
-            datasets: [{
-              label: '총 지출 금액',
-              data: [19000, 15000, 19500, 13000, 34500],
-              backgroundColor: 'rgba(131, 162, 219, 0.3)',
-              borderColor: '#83A2DB',
-              tension: 0.4,
-              fill: true
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: { legend: { position: 'bottom' } },
-            scales: { y: { beginAtZero: true } }
-          }
-        });
+      //   new Chart(document.getElementById("dailyTotalChart"), {
+      //     type: 'line',
+      //     data: {
+      //       labels: ['5/1', '5/2', '5/3', '5/4', '5/5'],
+      //       datasets: [{
+      //         label: '총 지출 금액',
+      //         data: [19000, 15000, 19500, 13000, 34500],
+      //         backgroundColor: 'rgba(131, 162, 219, 0.3)',
+      //         borderColor: '#83A2DB',
+      //         tension: 0.4,
+      //         fill: true
+      //       }]
+      //     },
+      //     options: {
+      //       responsive: true,
+      //       plugins: { legend: { position: 'bottom' } },
+      //       scales: { y: { beginAtZero: true } }
+      //     }
+      //   });
   
-        new Chart(document.getElementById("categoryDailyChart"), {
-          type: 'line',
-          data: {
-            labels: ['5/1', '5/2', '5/3', '5/4', '5/5'],
-            datasets: [
-              { label: '식비', data: [10000, 12000, 9000, 6000, 23000], borderColor: '#FF6384', fill: false },
-              { label: '교통', data: [3000, 2000, 2500, 1500, 2500], borderColor: '#36A2EB', fill: false },
-              { label: '쇼핑', data: [6000, 10000, 8000, 5500, 9000], borderColor: '#FFCE56', fill: false },
+      //   new Chart(document.getElementById("categoryDailyChart"), {
+      //     type: 'line',
+      //     data: {
+      //       labels: ['5/1', '5/2', '5/3', '5/4', '5/5'],
+      //       datasets: [
+      //         { label: '식비', data: [10000, 12000, 9000, 6000, 23000], borderColor: '#FF6384', fill: false },
+      //         { label: '교통', data: [3000, 2000, 2500, 1500, 2500], borderColor: '#36A2EB', fill: false },
+      //         { label: '쇼핑', data: [6000, 10000, 8000, 5500, 9000], borderColor: '#FFCE56', fill: false },
               
-            ]
-          },
-          options: {
-            responsive: true,
-            plugins: { legend: { position: 'bottom' } },
-            scales: { y: { beginAtZero: true } }
-          }
-        });
-      }
+      //       ]
+      //     },
+      //     options: {
+      //       responsive: true,
+      //       plugins: { legend: { position: 'bottom' } },
+      //       scales: { y: { beginAtZero: true } }
+      //     }
+      //   });
+      // }
       
       let scene, camera, renderer, model,controls;
     
