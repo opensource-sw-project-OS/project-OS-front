@@ -99,7 +99,7 @@
       max-width: 600px;
       width: 100%;
       padding: 20px;
-      background: rgba(255, 255, 255, 0.5);
+      background: rgba(255, 255, 255, 0.4);
       border-radius: 20px;
       backdrop-filter: blur(15px);
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
@@ -112,7 +112,7 @@
     }
     .glass-col {
       flex: 1;
-      background: rgba(255, 255, 255, 0.5);
+      background: rgba(255, 255, 255, 0.4);
       border-radius: 20px;
       padding: 20px;
       backdrop-filter: blur(15px);
@@ -197,105 +197,159 @@
     <main class="main-content" id="main"></main>
   
     <script>
-       function showReceiptInput() {
-      document.getElementById("main").innerHTML = `
-        <div class="glass-row-2">
-          <div class="glass-col">
-            <h3>사진 업로드 및 분석</h3>
-            <input type="file" id="upload" accept="image/*" / >
-            <img id="preview" />
-            <img id="croppedResult" />
-            <br>
-            <label>분야 선택:</label>
-            <select id="category">
-              <option value="식비">식비</option>
-              <option value="교통">교통</option>
-              <option value="쇼핑">쇼핑</option>
-              <option value="구독">구독</option>
-              <option value="기타">기타</option>
-            </select>
-            <br><br>
-            <button id="confirmCrop"  style="margin-top:10px; padding:8px 16px; border:none; background:#83A2DB; color:white; border-radius:8px;"> 크롭 </button>
-            <button onclick="runOCR()" style="margin-top:10px; padding:8px 16px; border:none; background:#83A2DB; color:white; border-radius:8px;"> OCR 실행 </button>
-          </div>
-          <div class="glass-col" >
-            <h3> OCR 결과</h3>
-            <div id="result">OCR 결과 영역</div>
-          </div>
+        function showReceiptInput() {
+    document.getElementById("main").innerHTML = `
+      <div class="glass-row-2">
+        <div class="glass-col">
+          <h3>오늘의 지출을 입력해주세요.</h3>
+          <input type="file" id="upload" accept="image/*" />
+          <img id="preview" />
+          <img id="croppedResult" />
+          <br>
+          <label>분야 선택:</label>
+          <select id="category">
+            <option value="식비">식비</option>
+            <option value="교통">교통</option>
+            <option value="쇼핑">쇼핑</option>
+            <option value="구독">구독</option>
+            <option value="기타">기타</option>
+          </select>
+          <br><br>
+          <button id="confirmCrop" style="margin-top:10px; padding:8px 16px; border:none; background:#83A2DB; color:white; border-radius:8px;"> 크롭 </button>
+          <button onclick="runOCR()" style="margin-top:10px; padding:8px 16px; border:none; background:#83A2DB; color:white; border-radius:8px;"> OCR 실행 </button>
         </div>
-        <div class="glass-row-2">
-          <div class="glass-col" style="width: 100%;">
-            <h3>날짜 / 금액 추출</h3>
-          <div id="extracted">날짜 : <br>금액 :
-          </div>
-      
-        </div>`;
+        <div class="glass-col">
+          <h3>오늘 하루는 어떠셨나요?</h3>
+          <input type="text" id="dailyFeelingInput" placeholder="예: 기쁘다, 힘들었다 등" style="width: 100%; padding: 10px; border-radius: 8px;" />
+          <div id="feelingSavedMessage" style="font-size: 13px; color: #444; margin-top: 5px;"></div>
+          <button onclick="submitDailyFeeling()" style="margin-top:10px; padding:8px 16px; border:none; background:#83A2DB; color:white; border-radius:8px;">전송</button>
+          <div id="dailyFeelingResult" style="margin-top: 20px; font-weight: bold;"></div>
+          <div id="affirmationBox" style="margin-top: 10px;"></div>
+        </div>
+      </div>
 
-      const upload = document.getElementById('upload');
-      const preview = document.getElementById('preview');
-      const croppedResult = document.getElementById('croppedResult');
-      const result = document.getElementById('result');
-      const extracted = document.getElementById('extracted');
-      let cropper = null;
-      let croppedBlob = null;
+      <div style="text-align: center; margin-top: 20px;">
+        <button onclick="toggleResult()" style="padding:10px 20px; background:#CEDDEF; border:none; border-radius:8px; font-weight:bold;">▼ OCR 분석 결과 보기</button>
+      </div>
+      <div id="resultContainer" style="display: none; margin-top: 10px;">
+        <div class="glass-box">
+          <h3>OCR 결과</h3>
+          <div id="result">OCR 결과 영역</div>
+        </div>
+      </div>
+    `;
 
-      upload.addEventListener('change', () => {
-        const file = upload.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-          preview.src = reader.result;
-          preview.style.display = 'block';
-          croppedResult.style.display = 'none';
-          if (cropper) cropper.destroy();
-          cropper = new Cropper(preview, {
-            aspectRatio: NaN,
-            viewMode: 1
-          });
-        };
-        reader.readAsDataURL(file);
-      });
+    const upload = document.getElementById('upload');
+    const preview = document.getElementById('preview');
+    const croppedResult = document.getElementById('croppedResult');
+    const result = document.getElementById('result');
+    let cropper = null;
+    let croppedBlob = null;
 
-      document.getElementById('confirmCrop').addEventListener('click', () => {
-        if (!cropper) return;
-        const canvas = cropper.getCroppedCanvas();
-        canvas.toBlob(blob => {
-          croppedBlob = blob;
-          croppedResult.src = URL.createObjectURL(blob);
-          croppedResult.style.display = 'block';
-          preview.style.display = 'none';
-          cropper.destroy();
-          cropper = null;
-        }, 'image/png');
-      });
-
-      window.runOCR = function() {
-        if (!croppedBlob) {
-          alert("크롭 후 버튼을 눌러주세요");
-          return;
-        }
-        result.innerText = "OCR 인식 중...";
-        extracted.innerText = "추출 중...";
-        Tesseract.recognize(
-          croppedBlob,
-          'kor',
-          {
-            langPath: 'https://tessdata.projectnaptha.com/4.0.0/',
-            logger: m => console.log(m)
-          }
-        ).then(({ data: { text } }) => {
-          result.innerText = text;
-          const dateMatch = text.match(/\d{4}[.\-/]\d{1,2}[.\-/]\d{1,2}/);
-          const date = dateMatch ? dateMatch[0] : '날짜 미인식';
-          const totalMatch = text.match(/(합계|총액|총합계)[^\d]*(₩?\s?\d{1,3}(,\d{3})*(원)?)/);
-          const amount = totalMatch ? totalMatch[2] : '금액 미인식';
-          extracted.innerHTML = `날짜 : ${date}<br>합계 금액 : ${amount}`;
-        }).catch(err => {
-          result.innerText = `오류 발생: ${err.message}`;
-          extracted.innerText = '추출 실패';
+    upload.addEventListener('change', () => {
+      const file = upload.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        preview.src = reader.result;
+        preview.style.display = 'block';
+        croppedResult.style.display = 'none';
+        if (cropper) cropper.destroy();
+        cropper = new Cropper(preview, {
+          aspectRatio: NaN,
+          viewMode: 1
         });
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('confirmCrop').addEventListener('click', () => {
+      if (!cropper) return;
+      const canvas = cropper.getCroppedCanvas();
+      canvas.toBlob(blob => {
+        croppedBlob = blob;
+        croppedResult.src = URL.createObjectURL(blob);
+        croppedResult.style.display = 'block';
+        preview.style.display = 'none';
+        cropper.destroy();
+        cropper = null;
+      }, 'image/png');
+    });
+
+    window.runOCR = function() {
+      if (!croppedBlob) {
+        alert("크롭 후 버튼을 눌러주세요");
+        return;
       }
+      result.innerText = "OCR 인식 중...";
+      Tesseract.recognize(
+        croppedBlob,
+        'kor',
+        {
+          langPath: 'https://tessdata.projectnaptha.com/4.0.0/',
+          logger: m => console.log(m)
+        }
+      ).then(({ data: { text } }) => {
+        result.innerText = text;
+      }).catch(err => {
+        result.innerText = `오류 발생: ${err.message}`;
+      });
     }
+  }
+
+  function toggleResult() {
+    const container = document.getElementById("resultContainer");
+    container.style.display = (container.style.display === "none") ? "block" : "none";
+  }
+
+  async function loadAffirmation() {
+    try {
+      const res = await fetch("https://cors-anywhere.herokuapp.com/https://www.affirmations.dev/");
+      if (!res.ok) throw new Error("리소스 요청 실패");
+
+      const data = await res.json();
+      const quote = data.affirmation;
+
+      document.getElementById("affirmationBox").innerHTML = `
+        <h3>오늘의 긍정 문구 🌼</h3>
+        <p style="font-size:18px;">"${quote}"</p>
+      `;
+    } catch (err) {
+      document.getElementById("affirmationBox").innerHTML = `<p>긍정 문구를 불러오지 못했습니다.</p>`;
+      console.error("오류 발생:", err);
+    }
+  }
+
+  function submitDailyFeeling() {
+    const input = document.getElementById("dailyFeelingInput").value.trim();
+    const resultBox = document.getElementById("dailyFeelingResult");
+    const affirmationBox = document.getElementById("affirmationBox");
+    const savedMsg = document.getElementById("feelingSavedMessage");
+
+    if (!input) {
+      resultBox.innerText = "감정을 입력해주세요.";
+      affirmationBox.innerHTML = "";
+      savedMsg.innerText = "";
+      return;
+    }
+
+    savedMsg.innerText = "오늘의 감정을 기록했습니다.";
+
+    const negativeEmotions = ["슬픔", "불안", "분노", "우울", "짜증", "힘들"];
+    const isNegative = negativeEmotions.some(emotion => input.includes(emotion));
+
+    if (input.includes("행복") || input.includes("기쁨") || input.includes("좋았")) {
+      resultBox.innerText = "오늘 하루는 행복하셨군요 😊";
+      affirmationBox.innerHTML = "";
+    } else if (isNegative) {
+      resultBox.innerText = "오늘 많이 힘드셨군요 😢 내일은 더 좋아질 거예요.";
+      affirmationBox.innerHTML = `긍정 문구 불러오는 중...`;
+      loadAffirmation();
+    } else {
+      resultBox.innerText = "";
+      affirmationBox.innerHTML = "";
+    }
+  }
 
       function showBudget() {
         document.getElementById("main").innerHTML = `
@@ -554,22 +608,22 @@
       console.log("모델 씬에 추가");
       });
 
-    // 감정에 따라 긍정 문구 박스를 보여주기
-      const negativeEmotions = ['슬픔', '분노', '불안'];
-      if (negativeEmotions.includes(input)) {
-        document.getElementById("affirmationBox").style.display = "block";
+    // // 감정에 따라 긍정 문구 박스를 보여주기
+    //   const negativeEmotions = ['슬픔', '분노', '불안'];
+    //   if (negativeEmotions.includes(input)) {
+    //     document.getElementById("affirmationBox").style.display = "block";
 
-        document.getElementById("affirmationBox").innerHTML = `
-          <div class="glass-box" id="affirmationBox" style="width: 100%; style="max-width: 800px;">
-            긍정 문구 불러오는 중...
-          </div>
-      `;
+    //     document.getElementById("affirmationBox").innerHTML = `
+    //       <div class="glass-box" id="affirmationBox" style="width: 100%; style="max-width: 800px;">
+    //         긍정 문구 불러오는 중...
+    //       </div>
+    //   `;
 
-        loadAffirmation();
-      } else {
-        document.getElementById("affirmationBox").style.display = "none";
-        document.getElementById("affirmationBox").innerHTML = '';
-      }
+    //     loadAffirmation();
+    //   } else {
+    //     document.getElementById("affirmationBox").style.display = "none";
+    //     document.getElementById("affirmationBox").innerHTML = '';
+    //   }
 
 
 
@@ -602,24 +656,24 @@
     // }
 
 
-    // affirmation.js
-    async function loadAffirmation() {
-      try {
-        const res = await fetch("https://cors-anywhere.herokuapp.com/https://www.affirmations.dev/");
-        if (!res.ok) throw new Error("리소스 요청 실패");
+    // // affirmation.js
+    // async function loadAffirmation() {
+    //   try {
+    //     const res = await fetch("https://cors-anywhere.herokuapp.com/https://www.affirmations.dev/");
+    //     if (!res.ok) throw new Error("리소스 요청 실패");
 
-        const data = await res.json();
-        const quote = data.affirmation;
+    //     const data = await res.json();
+    //     const quote = data.affirmation;
 
-        document.getElementById("affirmationBox").innerHTML = `
-          <h2>오늘의 긍정 문구 🌼</h2>
-          <p style="font-size:18px;">"${quote}"</p>
-        `;
-      } catch (err) {
-        document.getElementById("affirmationBox").innerHTML = `<p>긍정 문구를 불러오지 못했습니다.</p>`;
-        console.error("오류 발생:", err);
-      }
-    }
+    //     document.getElementById("affirmationBox").innerHTML = `
+    //       <h2>오늘의 긍정 문구 🌼</h2>
+    //       <p style="font-size:18px;">"${quote}"</p>
+    //     `;
+    //   } catch (err) {
+    //     document.getElementById("affirmationBox").innerHTML = `<p>긍정 문구를 불러오지 못했습니다.</p>`;
+    //     console.error("오류 발생:", err);
+    //   }
+    // }
 
 
     //     async function loadAffirmation() {
