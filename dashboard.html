@@ -147,6 +147,29 @@
       border: 1px solid #ccc;
       display: none;
     }
+      #calendar-container {
+    background-color: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 20px;
+    max-width: 900px;
+    margin: 30px auto;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
+  .fc-daygrid-day-number {
+    font-size: 14px;
+  }
+  .fc-event-title {
+    font-size: 28px !important; /* 이모티콘 크게 */
+    line-height: 1.2;
+  }
+  .fc-event-time {
+    display: none;
+  }
+  .fc-event-description {
+    font-size: 10px;
+    color: #444;
+  }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="apikey.js"></script>
@@ -169,7 +192,16 @@
   <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
- 
+    <!-- 화면 해상도에 따라 글자 크기 대응(모바일 대응) -->
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+  <!-- jquery CDN -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- fullcalendar CDN -->
+  <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.8.0/main.min.css' rel='stylesheet' />
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.8.0/main.min.js'></script>
+  <!-- fullcalendar 언어 CDN -->
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.8.0/locales-all.min.js'></script>
+
 </head>
   <body>
     <header>
@@ -189,8 +221,8 @@
       <div class="pill-menu" onclick="showBudget()">
         <img src="image/budget.png" alt="예산"> 예산
       </div>
-      <div class="pill-menu" onclick="showLunchMap()">
-        <img src="image/dish.png" alt="점메추"> 점메추
+      <div class="pill-menu" onclick="showCalendar()">
+        <img src="image/dish.png" alt="달력"> 달력
       </div>
     </aside>
   
@@ -596,85 +628,213 @@
 
   drawSelectedChart();
 }
-  
-      // function showSpending() {
-      //   document.getElementById("main").innerHTML = `
-      //     <div class="glass-row-2">
-      //       <div class="glass-col">
-      //         <h3>분야별 총 지출</h3>
-      //         <canvas id="categoryTotalChart"></canvas>
-      //       </div>
-      //       <div class="glass-col">
-      //         <h3>하루 지출 총합 변화</h3>
-      //         <canvas id="dailyTotalChart"></canvas>
-      //       </div>
-      //     </div>
-      //     <div class="glass-row-2">
-      //     <div class="glass-col" style="width: 100%;">
-      //       <h3>분야별 일별 지출 변화</h3>
-      //       <canvas id="categoryDailyChart"></canvas>
-      //     </div>
-      //   </div>
-      //   `;
-        
-  
-      //   new Chart(document.getElementById("categoryTotalChart"), {
-      //     type: 'bar',
-      //     data: {
-      //       labels: ['식비', '교통', '쇼핑', '구독', '기타'],
-      //       datasets: [{
-      //         label: '지출 금액',
-      //         data: [60000, 11500, 38500, 10000, 15000],
-      //         backgroundColor: '#83A2DB',
-      //         borderRadius: 8
-      //       }]
-      //     },
-      //     options: {
-      //       responsive: true,
-      //       plugins: { legend: { display: false } },
-      //       scales: { y: { beginAtZero: true } }
-      //     }
-      //   });
-  
-      //   new Chart(document.getElementById("dailyTotalChart"), {
-      //     type: 'line',
-      //     data: {
-      //       labels: ['5/1', '5/2', '5/3', '5/4', '5/5'],
-      //       datasets: [{
-      //         label: '총 지출 금액',
-      //         data: [19000, 15000, 19500, 13000, 34500],
-      //         backgroundColor: 'rgba(131, 162, 219, 0.3)',
-      //         borderColor: '#83A2DB',
-      //         tension: 0.4,
-      //         fill: true
-      //       }]
-      //     },
-      //     options: {
-      //       responsive: true,
-      //       plugins: { legend: { position: 'bottom' } },
-      //       scales: { y: { beginAtZero: true } }
-      //     }
-      //   });
-  
-      //   new Chart(document.getElementById("categoryDailyChart"), {
-      //     type: 'line',
-      //     data: {
-      //       labels: ['5/1', '5/2', '5/3', '5/4', '5/5'],
-      //       datasets: [
-      //         { label: '식비', data: [10000, 12000, 9000, 6000, 23000], borderColor: '#FF6384', fill: false },
-      //         { label: '교통', data: [3000, 2000, 2500, 1500, 2500], borderColor: '#36A2EB', fill: false },
-      //         { label: '쇼핑', data: [6000, 10000, 8000, 5500, 9000], borderColor: '#FFCE56', fill: false },
-              
-      //       ]
-      //     },
-      //     options: {
-      //       responsive: true,
-      //       plugins: { legend: { position: 'bottom' } },
-      //       scales: { y: { beginAtZero: true } }
-      //     }
-      //   });
-      // }
-      
+
+
+  function showCalendar() {
+    document.getElementById("main").innerHTML = `
+      <div id='calendar-container'>
+        <div id='calendar'></div>
+      </div>
+    `;
+
+    const calendarEl = document.getElementById('calendar');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'dayGridMonth',
+      locale: 'ko',
+      height: 'auto',
+      headerToolbar: {
+        left: '',
+        center: 'title',
+        right: ''
+      },
+        events: [
+        {
+          start: '2025-05-01',
+          extendedProps: {
+            emoji: '😢',
+            amount: 12000
+          }
+        },
+        {
+          start: '2025-05-02',
+          extendedProps: {
+            emoji: '😊',
+            amount: 6500
+          }
+        },
+        {
+          start: '2025-05-03',
+          extendedProps: {
+            emoji: '😐',
+            amount: 3000
+          }
+        },
+        {
+          start: '2025-05-04',
+          extendedProps: {
+            emoji: '😢',
+            amount: 9000
+          }
+        },
+        {
+          start: '2025-05-05',
+          extendedProps: {
+            emoji: '😊',
+            amount: 21000
+          }
+        },
+        {
+          start: '2025-05-06',
+          extendedProps: {
+            emoji: '😠',
+            amount: 143000
+          }
+        },
+                {
+          start: '2025-05-07',
+          extendedProps: {
+            emoji: '😢',
+            amount: 12000
+          }
+        },
+        {
+          start: '2025-05-08',
+          extendedProps: {
+            emoji: '😊',
+            amount: 6500
+          }
+        },
+        {
+          start: '2025-05-09',
+          extendedProps: {
+            emoji: '😐',
+            amount: 3000
+          }
+        },
+        {
+          start: '2025-05-10',
+          extendedProps: {
+            emoji: '😢',
+            amount: 9000
+          }
+        },
+        {
+          start: '2025-05-11',
+          extendedProps: {
+            emoji: '😊',
+            amount: 21000
+          }
+        },
+        {
+          start: '2025-05-12',
+          extendedProps: {
+            emoji: '😠',
+            amount: 143000
+          }
+        },
+        {
+          start: '2025-05-13',
+          extendedProps: {
+            emoji: '😢',
+            amount: 12000
+          }
+        },
+        {
+          start: '2025-05-14',
+          extendedProps: {
+            emoji: '😊',
+            amount: 6500
+          }
+        },
+        {
+          start: '2025-05-15',
+          extendedProps: {
+            emoji: '😐',
+            amount: 3000
+          }
+        },
+        {
+          start: '2025-05-16',
+          extendedProps: {
+            emoji: '😢',
+            amount: 9000
+          }
+        },
+        {
+          start: '2025-05-17',
+          extendedProps: {
+            emoji: '😊',
+            amount: 21000
+          }
+        },
+        {
+          start: '2025-05-18',
+          extendedProps: {
+            emoji: '😠',
+            amount: 143000
+          }
+        },
+                {
+          start: '2025-05-19',
+          extendedProps: {
+            emoji: '😢',
+            amount: 12000
+          }
+        },
+        {
+          start: '2025-05-20',
+          extendedProps: {
+            emoji: '😊',
+            amount: 6500
+          }
+        },
+        {
+          start: '2025-05-21',
+          extendedProps: {
+            emoji: '😐',
+            amount: 3000
+          }
+        },
+        {
+          start: '2025-05-22',
+          extendedProps: {
+            emoji: '😢',
+            amount: 9000
+          }
+        },
+        {
+          start: '2025-05-23',
+          extendedProps: {
+            emoji: '😊',
+            amount: 21000
+          }
+        },
+        {
+          start: '2025-05-24',
+          extendedProps: {
+            emoji: '😠',
+            amount: 143000
+          }
+        }
+      ],
+      eventContent: function (arg) {
+        const { emoji, amount } = arg.event.extendedProps;
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = `
+          <div style="font-size:35px;">${emoji}</div>
+          <div style="font-size:12px; color:#444;">₩${amount.toLocaleString()}</div>
+        `;
+        return { domNodes: [wrapper] };
+      },
+      eventDidMount: function (info) {
+        info.el.style.backgroundColor = 'transparent';
+        info.el.style.border = 'none';
+        info.el.style.textAlign = 'center';
+      }});
+
+    calendar.render();
+  }
+
       let scene, camera, renderer, model,controls;
     
       function showEmotion() {
@@ -887,6 +1047,8 @@
 //     console.error("오류 발생:", err);
 //   }
 // }
+
+
 
 
 
