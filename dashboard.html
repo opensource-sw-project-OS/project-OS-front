@@ -109,27 +109,29 @@
       display: flex;
       gap: 20px;
       width: 90%;
+      text-align: center;
     }
     .glass-col {
       flex: 1;
       background: rgba(255, 255, 255, 0.4);
       border-radius: 20px;
-      padding: 20px;
+      padding: 40px;
       backdrop-filter: blur(15px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      margin-top: 20px;
     }
 
     .glass-wrapper {
-  width: 100%;
-  max-width: 600px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  align-items: center;
-}
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
+    }
 
     canvas {
-      
+      text-align: center;
       margin-top: 20px;
       background: transparent;
       border-radius: 10px;
@@ -151,9 +153,9 @@
     background-color: rgba(255, 255, 255, 0.4);
     backdrop-filter: blur(10px);
     border-radius: 20px;
-    padding: 20px;
+    padding: 50px;
     max-width: 900px;
-    margin: 30px auto;
+    margin: 10px auto;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
   }
   .fc-daygrid-day-number {
@@ -170,22 +172,40 @@
     font-size: 10px;
     color: #444;
   }
+  .emotion-diary-container {
+    display: flex;
+    flex-direction: row;
+    gap: 40px; /* 각 컬럼 사이 간격 */
+    justify-content: space-between;
+    padding: 20px;
+  }
+
+  .emotion-diary-container .glass-col {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+  }
+  .emotion-table {
+    flex: 1.2;
+  }
+  .emotion-table table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+    border: none; /* 전체 테두리 제거 */
+  }
+  .emotion-table th, .emotion-table td {
+    padding: 10px;
+    border-bottom: 1px solid #b2b0b0;
+  }
+  .emotion-table thead tr {
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="apikey.js"></script>
-<script>
-  // GOOGLE_API_KEY 변수가 전역(global)으로 등록됨
-  console.log(GOOGLE_API_KEY);
-
-  const script = document.createElement('script');
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_API_KEY}&libraries=places`;
-  script.async = true;
-  script.defer = true;
-  document.head.appendChild(script);
-</script>
-
-
-
   <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/examples/js/loaders/GLTFLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/examples/js/controls/OrbitControls.js"></script>
@@ -215,14 +235,17 @@
       <div class="pill-menu" onclick="showSpending()">
         <img src="image/graph.png" alt="그래프"> 그래프
       </div>
-      <div class="pill-menu" onclick="showEmotion()">
+      <!-- <div class="pill-menu" onclick="showEmotion()">
         <img src="image/emotion.png" alt="감정"> 감정
-      </div>
+      </div> -->
       <div class="pill-menu" onclick="showBudget()">
         <img src="image/budget.png" alt="예산"> 예산
       </div>
       <div class="pill-menu" onclick="showCalendar()">
         <img src="image/dish.png" alt="달력"> 달력
+      </div>
+      <div class="pill-menu" onclick="showEmotionDiary()">
+        <img src="image/emotion.png" alt="다이어리"> 다이어리
       </div>
     </aside>
   
@@ -234,12 +257,12 @@
       <div class="glass-row-2">
         <div class="glass-col">
           <h3>오늘의 지출을 입력해주세요.</h3>
-          <input type="file" id="upload" accept="image/*" />
+          <input type="file" id="upload" accept="image/*" style="padding: 5px 16px; margin-bottom: 20px; border-radius: 8px;"/>
           <img id="preview" />
           <img id="croppedResult" />
           <br>
           <label>분야 선택:</label>
-          <select id="category">
+          <select id="category"  style="padding: 5px 16px; margin-bottom: 20px; border-radius: 8px;">
             <option value="식비">식비</option>
             <option value="교통">교통</option>
             <option value="쇼핑">쇼핑</option>
@@ -253,8 +276,8 @@
         <div class="glass-col">
           <h3>오늘 하루는 어떠셨나요?</h3>
           <input type="text" id="dailyFeelingInput" placeholder="예: 기쁘다, 힘들었다 등" style="width: 100%; padding: 10px; border-radius: 8px;" />
-          <div id="feelingSavedMessage" style="font-size: 13px; color: #444; margin-top: 5px;"></div>
-          <button onclick="submitDailyFeeling()" style="margin-top:10px; padding:8px 16px; border:none; background:#83A2DB; color:white; border-radius:8px;">전송</button>
+          <div id="feelingSavedMessage" style="font-size: 13px; color: #444; margin-top: 5px; "></div>
+          <button onclick="submitDailyFeeling()" style="margin-top:10px;margin-bottom: 50px; padding:8px 16px; border:none; background:#83A2DB; color:white; border-radius:8px;">전송</button>
           <div id="dailyFeelingResult" style="margin-top: 20px; font-weight: bold;"></div>
           <div id="affirmationBox" style="margin-top: 10px;"></div>
         </div>
@@ -387,8 +410,8 @@
         document.getElementById("main").innerHTML = `
           <div class="glass-box">
             <h2>이번 달 예산</h2>
-            <input type="number" id="totalBudget" placeholder="총 예산 입력 (₩)" />
-            <input type="number" id="usedBudget" placeholder="사용한 금액 입력 (₩)" />
+            <input type="number" id="totalBudget" placeholder="총 예산 입력 (₩)" style="padding: 5px 16px; margin-bottom: 20px; border-radius: 8px;"/>
+            <input type="number" id="usedBudget" placeholder="사용한 금액 입력 (₩)" style="padding: 5px 16px; margin-bottom: 20px; border-radius: 8px;"/>
             <button onclick="drawChart()" style="margin-top:10px; padding:8px 16px; border:none; background:#83A2DB; color:white; border-radius:8px;">한눈에 확인</button>
             <canvas id="budgetChart" width="300" height="300"></canvas>
           </div>
@@ -428,31 +451,53 @@
         });
       }
   
-      function showLunchMap() {
-    const lunchBudget = 8000; // 예시 값
-
-    document.getElementById("main").innerHTML = `
-      <div class="glass-box">
-        <h2>점심 메뉴 추천 🍱</h2>
-        <p>1인당 점심 예산: 약 ₩${lunchBudget.toLocaleString()}원</p>
-        <div id="map" style="width:100%; height:400px; border-radius:10px;"></div>
-      </div>
-    `;
-
-    const dankookDujon = { lat: 37.321877, lng: 127.126471 };
-
-    const map = new google.maps.Map(document.getElementById("map"), {
-      center: dankookDujon,
-      zoom: 15,
-    });
-
-    // 예시 마커 (단국대 위치)
-    new google.maps.Marker({
-      map,
-      position: dankookDujon,
-      title: "단국대학교 죽전캠퍼스",
-    });
-  }
+function showEmotionDiary() {
+  document.getElementById("main").innerHTML = `
+    <div id="calendar-view">
+  <div class="emotion-diary-container">
+    <div class="glass-col emotion-table">
+      <h2 style="text-align:center; font-weight:bold;">감정 다이어리</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>날짜</th>
+            <th>감정</th>
+            <th>그날의 문장</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>05/20</td>
+            <td>😢</td>
+            <td>시험때문에 힘들어</td>
+          </tr>
+          <tr>
+            <td>05/19</td>
+            <td>😡</td>
+            <td>친구에게 실망했어</td>
+          </tr>
+          <tr>
+            <td>05/18</td>
+            <td>😊</td>
+            <td>좋은 날씨 덕분에 산책했어</td>
+          </tr>
+          <tr>
+            <td>05/17</td>
+            <td>😊</td>
+            <td>~~~~</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="glass-col" style="flex: 1;">
+              <h3 style="font-size:25px;">이번 주의 감정</h3>
+              <canvas id="threeCanvas" style="width: 100%; height: 300px;"></canvas>
+    </div>
+  </div>
+</div>
+  `;
+ init3D(); // 3D 설정
+}
 
   function showSpending() {
   document.getElementById("main").innerHTML = `
@@ -460,7 +505,7 @@
       <h2></h2>
       <select id="chartSelector" style="padding: 8px 16px; margin-bottom: 20px; border-radius: 8px;">
         <option value="emotionTotal">감정별 지출 총액</option>
-        <option value="dailyEmotion">일별 감정별 지출</option>
+        <option value="dailyEmotion">일별 감정과 지출</option>
         <option value="dailyTotal">일별 지출</option>
         <option value="categoryTotal">카테고리별 지출</option>
       </select>
@@ -490,46 +535,113 @@
   }
 
   function drawEmotionTotalChart() {
-    const data = [
-      { emotion: "슬픔", value: 55000 },
-      { emotion: "보통", value: 25000 },
-      { emotion: "분노", value: 10000 },
-      { emotion: "기쁨", value: 7000 }
-    ];
-    const total = data.reduce((sum, item) => sum + item.value, 0);
-    const labels = data.map(d => d.emotion);
-    const values = data.map(d => d.value);
-    const percents = data.map(d => Math.round((d.value / total) * 100));
+  const data = [
+    { emotion: "슬픔", value: 55000 },
+    { emotion: "보통", value: 25000 },
+    { emotion: "분노", value: 10000 },
+    { emotion: "기쁨", value: 7000 }
+  ];
 
-    chart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: '지출 총액',
-          data: values,
-          backgroundColor: ['#83A2DB', '#84d9c0', '#ff7aa2', '#f7c873'],
-          borderRadius: 10
-        }]
-      },
-      options: {
-        indexAxis: 'y',
-        plugins: {
-          tooltip: {
-            callbacks: {
-              label: function(ctx) {
-                return `₩${ctx.raw.toLocaleString()} (${percents[ctx.dataIndex]}%)`;
-              }
-            }
-          },
-          legend: { display: false }
-        },
-        scales: {
-          x: { beginAtZero: true }
-        }
-      }
-    });
+  const total = data.reduce((sum, item) => sum + item.value, 0);
+  const labels = data.map(d => d.emotion);
+  const values = data.map(d => d.value);
+  const percents = data.map(d => Math.round((d.value / total) * 100));
+  const colors = ['#83A2DB', '#84d9c0', '#ff7aa2', '#f7c873'];
+
+  // 가장 많은 감정 찾기
+  const maxIndex = values.indexOf(Math.max(...values));
+  const topEmotion = labels[maxIndex];
+  const topColor = colors[maxIndex];
+
+  // 문구 DOM이 없으면 삽입
+  const chartContainer = document.querySelector(".glass-box");
+  if (!document.getElementById('emotionSummary')) {
+    const summary = document.createElement('h3');
+    summary.id = 'emotionSummary';
+    summary.style.textAlign = 'center';
+    summary.style.marginBottom = '15px';
+    chartContainer.insertBefore(summary, chartContainer.querySelector("canvas"));
   }
+
+  // 문구 텍스트 갱신
+  document.getElementById("emotionSummary").innerHTML =
+    `이번 달 지출은 <span style="color:${topColor}; font-weight:bold; font-size:30px">${topEmotion}</span>이 가장 많아요`;
+
+  // 차트 그리기
+  const ctx = document.getElementById("spendingChart").getContext("2d");
+  chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: '지출 총액',
+        data: values,
+        backgroundColor: colors,
+        borderRadius: 10
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: function (ctx) {
+              return `₩${ctx.raw.toLocaleString()} (${percents[ctx.dataIndex]}%)`;
+            }
+          }
+        },
+        legend: { display: false }
+      },
+      scales: {
+        x: { beginAtZero: true }
+      }
+    }
+  });
+}
+
+
+  // function drawEmotionTotalChart() {
+    
+  //   const data = [
+  //     { emotion: "슬픔", value: 55000 },
+  //     { emotion: "보통", value: 25000 },
+  //     { emotion: "분노", value: 10000 },
+  //     { emotion: "기쁨", value: 7000 }
+  //   ];
+  //   const total = data.reduce((sum, item) => sum + item.value, 0);
+  //   const labels = data.map(d => d.emotion);
+  //   const values = data.map(d => d.value);
+  //   const percents = data.map(d => Math.round((d.value / total) * 100));
+
+  //   chart = new Chart(ctx, {
+  //     type: 'bar',
+  //     data: {
+  //       labels: labels,
+  //       datasets: [{
+  //         label: '지출 총액',
+  //         data: values,
+  //         backgroundColor: ['#83A2DB', '#84d9c0', '#ff7aa2', '#f7c873'],
+  //         borderRadius: 10
+  //       }]
+  //     },
+  //     options: {
+  //       indexAxis: 'y',
+  //       plugins: {
+  //         tooltip: {
+  //           callbacks: {
+  //             label: function(ctx) {
+  //               return `₩${ctx.raw.toLocaleString()} (${percents[ctx.dataIndex]}%)`;
+  //             }
+  //           }
+  //         },
+  //         legend: { display: false }
+  //       },
+  //       scales: {
+  //         x: { beginAtZero: true }
+  //       }
+  //     }
+  //   });
+  // }
 
   function drawDailyEmotionChart() {
     const data = [
