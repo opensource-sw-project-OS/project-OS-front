@@ -526,7 +526,7 @@ function showEmotionDiary() {
       case "emotionTotal":
         drawEmotionTotalChart(); break;
       case "dailyEmotion":
-        drawDailyEmotionChart(); break;
+        drawDailyEmotionChart();  break;
       case "dailyTotal":
         drawDailySpendingChart(); break;
       case "categoryTotal":
@@ -563,6 +563,7 @@ function showEmotionDiary() {
     chartContainer.insertBefore(summary, chartContainer.querySelector("canvas"));
   }
 
+  emotionSummary.style.display = 'block';
   // 문구 텍스트 갱신
   document.getElementById("emotionSummary").innerHTML =
     `이번 달 지출은 <span style="color:${topColor}; font-weight:bold; font-size:30px">${topEmotion}</span>이 가장 많아요`;
@@ -600,50 +601,10 @@ function showEmotionDiary() {
 }
 
 
-  // function drawEmotionTotalChart() {
-    
-  //   const data = [
-  //     { emotion: "슬픔", value: 55000 },
-  //     { emotion: "보통", value: 25000 },
-  //     { emotion: "분노", value: 10000 },
-  //     { emotion: "기쁨", value: 7000 }
-  //   ];
-  //   const total = data.reduce((sum, item) => sum + item.value, 0);
-  //   const labels = data.map(d => d.emotion);
-  //   const values = data.map(d => d.value);
-  //   const percents = data.map(d => Math.round((d.value / total) * 100));
-
-  //   chart = new Chart(ctx, {
-  //     type: 'bar',
-  //     data: {
-  //       labels: labels,
-  //       datasets: [{
-  //         label: '지출 총액',
-  //         data: values,
-  //         backgroundColor: ['#83A2DB', '#84d9c0', '#ff7aa2', '#f7c873'],
-  //         borderRadius: 10
-  //       }]
-  //     },
-  //     options: {
-  //       indexAxis: 'y',
-  //       plugins: {
-  //         tooltip: {
-  //           callbacks: {
-  //             label: function(ctx) {
-  //               return `₩${ctx.raw.toLocaleString()} (${percents[ctx.dataIndex]}%)`;
-  //             }
-  //           }
-  //         },
-  //         legend: { display: false }
-  //       },
-  //       scales: {
-  //         x: { beginAtZero: true }
-  //       }
-  //     }
-  //   });
-  // }
 
   function drawDailyEmotionChart() {
+    emotionSummary.style.display = 'none';
+    
     const data = [
       { date: "5/25", emotion: "슬픔", value: 50000 },
       { date: "5/26", emotion: "불안", value: 30000 },
@@ -654,7 +615,7 @@ function showEmotionDiary() {
       data: {
         labels: data.map(d => d.date),
         datasets: [{
-          label: '일별 감정별 지출',
+          label: '일별 감정 지출',
           data: data.map(d => d.value),
           fill: false,
           borderColor: '#83A2DB',
@@ -664,10 +625,13 @@ function showEmotionDiary() {
       options: {
         plugins: {
           tooltip: {
+              multiLine: true ,
             callbacks: {
               label: function(ctx) {
                 const item = data[ctx.dataIndex];
-                return `날짜: ${item.date}, 그날의 감정: ${item.emotion}, 지출: ₩${item.value.toLocaleString()}`;
+                return [`날짜: ${item.date}`,
+                `감정: ${item.emotion}`,
+                `지출: ₩${item.value.toLocaleString()}`];
               }
             }
           },
@@ -681,6 +645,7 @@ function showEmotionDiary() {
   }
 
   function drawDailySpendingChart() {
+    emotionSummary.style.display = 'none';
     const data = [
       { date: "5/25", value: 40000 },
       { date: "5/26", value: 60000 },
@@ -710,6 +675,7 @@ function showEmotionDiary() {
   }
 
   function drawCategoryChart() {
+    emotionSummary.style.display = 'none';
     const data = [
       { category: "식비", value: 30000 },
       { category: "쇼핑", value: 20000 },
