@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>로그인 / 회원가입</title>
+  <title>로그인</title>
   <style>
     @font-face {
       font-family: 'SUIT';
@@ -83,8 +83,8 @@
   <div class="auth-box">
     <h2>로그인</h2>
     <form id="loginForm">
-      <input type="text" name="uid" placeholder="아이디" required />
-      <input type="password" name="upw" placeholder="비밀번호" required />
+      <input type="text" name="Userid" placeholder="아이디" required />
+      <input type="password" name="Userpassword" placeholder="비밀번호" required />
       <button type="submit">로그인</button>
     </form>
     <div class="switch-link">
@@ -92,19 +92,37 @@
     </div>
   </div>
 
-  <!-- signup.html 용 예시 (필요 시 복사해서 별도 페이지로 사용) -->
-  <!--
-  <div class="auth-box">
-    <h2>회원가입</h2>
-    <form id="signupForm">
-      <input type="text" name="uid" placeholder="아이디" required />
-      <input type="password" name="upw" placeholder="비밀번호" required />
-      <button type="submit">회원가입</button>
-    </form>
-    <div class="switch-link">
-      이미 계정이 있으신가요? <a href="login.html">로그인</a>
-    </div>
-  </div>
-  -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      document.getElementById("loginForm").addEventListener("submit", async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData); // { Userid: '...', Userpassword: '...' }
+
+        try {
+          const res = await fetch("http://localhost:3000/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+          });
+
+          const result = await res.json();
+          if (!result.err) {
+            localStorage.setItem("token", result.token);
+            localStorage.setItem("Userid", result.Userid);
+            console.log("현재 로그인한 user_id: ", localStorage.getItem("Userid"));
+
+            window.location.href = "dashboard.html"; // 로그인 성공 시 이동
+          } else {
+            alert("로그인 실패: " + result.err);
+          }
+        } catch (err) {
+          console.error(err);
+          alert("서버 연결 실패");
+        }
+      });
+    });
+  </script>
 </body>
 </html>
