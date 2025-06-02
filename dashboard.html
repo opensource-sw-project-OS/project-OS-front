@@ -109,27 +109,29 @@
       display: flex;
       gap: 20px;
       width: 90%;
+      text-align: center;
     }
     .glass-col {
       flex: 1;
       background: rgba(255, 255, 255, 0.4);
       border-radius: 20px;
-      padding: 20px;
+      padding: 40px;
       backdrop-filter: blur(15px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      margin-top: 20px;
     }
 
     .glass-wrapper {
-  width: 100%;
-  max-width: 600px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  align-items: center;
-}
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
+    }
 
     canvas {
-      
+      text-align: center;
       margin-top: 20px;
       background: transparent;
       border-radius: 10px;
@@ -147,29 +149,79 @@
       border: 1px solid #ccc;
       display: none;
     }
+      #calendar-container {
+    background-color: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 50px;
+    max-width: 900px;
+    margin: 10px auto;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
+  .fc-daygrid-day-number {
+    font-size: 14px;
+  }
+  .fc-event-title {
+    font-size: 28px !important; /* 이모티콘 크게 */
+    line-height: 1.2;
+  }
+  .fc-event-time {
+    display: none;
+  }
+  .fc-event-description {
+    font-size: 10px;
+    color: #444;
+  }
+  .emotion-diary-container {
+    display: flex;
+    flex-direction: row;
+    gap: 40px; /* 각 컬럼 사이 간격 */
+    justify-content: space-between;
+    padding: 20px;
+  }
+
+  .emotion-diary-container .glass-col {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+  }
+  .emotion-table {
+    flex: 1.2;
+  }
+  .emotion-table table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+    border: none; /* 전체 테두리 제거 */
+  }
+  .emotion-table th, .emotion-table td {
+    padding: 10px;
+    border-bottom: 1px solid #b2b0b0;
+  }
+  .emotion-table thead tr {
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="apikey.js"></script>
-<script>
-  // GOOGLE_API_KEY 변수가 전역(global)으로 등록됨
-  console.log(GOOGLE_API_KEY);
-
-  const script = document.createElement('script');
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_API_KEY}&libraries=places`;
-  script.async = true;
-  script.defer = true;
-  document.head.appendChild(script);
-</script>
-
-
-
   <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/examples/js/loaders/GLTFLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.140.2/examples/js/controls/OrbitControls.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
- 
+    <!-- 화면 해상도에 따라 글자 크기 대응(모바일 대응) -->
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+  <!-- jquery CDN -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- fullcalendar CDN -->
+  <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.8.0/main.min.css' rel='stylesheet' />
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.8.0/main.min.js'></script>
+  <!-- fullcalendar 언어 CDN -->
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.8.0/locales-all.min.js'></script>
+
 </head>
   <body>
     <header>
@@ -178,92 +230,121 @@
     </header>
     <aside class="side-menu">
       <div class="pill-menu" onclick="showReceiptInput()">
-        <img src="image/money2.png" alt="지출입력"> 지출 입력
+        <img src="image/money2.png" alt="입력"> 입력
       </div>
       <div class="pill-menu" onclick="showSpending()">
-        <img src="image/graph.png" alt="지출 그래프"> 지출 그래프
-      </div>
-      <div class="pill-menu" onclick="showEmotion()">
-        <img src="image/emotion.png" alt="감정"> 감정
+        <img src="image/graph.png" alt="그래프"> 그래프
       </div>
       <div class="pill-menu" onclick="showBudget()">
         <img src="image/budget.png" alt="예산"> 예산
       </div>
-      <div class="pill-menu" onclick="showLunchMap()">
-        <img src="image/dish.png" alt="점메추"> 점메추
+      <div class="pill-menu" onclick="showCalendar()">
+        <img src="image/dish.png" alt="달력"> 달력
+      </div>
+      <div class="pill-menu" onclick="showEmotionDiary()">
+        <img src="image/emotion.png" alt="다이어리"> 다이어리
       </div>
     </aside>
   
     <main class="main-content" id="main"></main>
   
     <script>
-        function showReceiptInput() {
-    document.getElementById("main").innerHTML = `
+        // 로그인된 유저 토큰 및 ID 저장
+  let user_token = localStorage.getItem('token');
+  let user_id = localStorage.getItem('Userid');
+
+
+  if (!user_token) {
+  alert("로그인이 필요합니다.");
+  window.location.href = "login.html";
+}
+
+
+  async function uploadOCRImage(blob) {
+    const formData = new FormData();
+    formData.append('image', blob);
+
+    try {
+      const res = await fetch("http://localhost:3000/api/ocr", {
+        method: "POST",
+        body: formData,
+        headers: {
+          Authorization: `Bearer ${user_token}`
+        }
+      });
+      const data = await res.json();
+      return data; // { date: ..., amount: ... }
+    } catch (err) {
+      console.error("OCR 업로드 오류:", err);
+      return null;
+    }
+  }
+
+  function getTodayDate() {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  function showReceiptInput() {
+    const main = document.getElementById("main");
+    if (!main) return;
+
+    main.innerHTML = `
       <div class="glass-row-2">
         <div class="glass-col">
           <h3>오늘의 지출을 입력해주세요.</h3>
           <input type="file" id="upload" accept="image/*" />
-          <img id="preview" />
-          <img id="croppedResult" />
+          <img id="preview" style="max-width:100%; display:none;" />
+          <img id="croppedResult" style="max-width:100%; display:none;" />
+          <div id="ocrResult"></div>
           <br>
           <label>분야 선택:</label>
           <select id="category">
             <option value="식비">식비</option>
             <option value="교통">교통</option>
-            <option value="쇼핑">쇼핑</option>
+            <option value="편의점">편의점</option>
             <option value="구독">구독</option>
             <option value="기타">기타</option>
           </select>
           <br><br>
-          <button id="confirmCrop" style="margin-top:10px; padding:8px 16px; border:none; background:#83A2DB; color:white; border-radius:8px;"> 크롭 </button>
-          <button onclick="runOCR()" style="margin-top:10px; padding:8px 16px; border:none; background:#83A2DB; color:white; border-radius:8px;"> OCR 실행 </button>
-        </div>
-        <div class="glass-col">
-          <h3>오늘 하루는 어떠셨나요?</h3>
-          <input type="text" id="dailyFeelingInput" placeholder="예: 기쁘다, 힘들었다 등" style="width: 100%; padding: 10px; border-radius: 8px;" />
-          <div id="feelingSavedMessage" style="font-size: 13px; color: #444; margin-top: 5px;"></div>
-          <button onclick="submitDailyFeeling()" style="margin-top:10px; padding:8px 16px; border:none; background:#83A2DB; color:white; border-radius:8px;">전송</button>
-          <div id="dailyFeelingResult" style="margin-top: 20px; font-weight: bold;"></div>
-          <div id="affirmationBox" style="margin-top: 10px;"></div>
-        </div>
-      </div>
+          <button id="confirmCrop"> 크롭 </button>
+          <button id="runOCR"> OCR 실행 </button>
 
-      <div style="text-align: center; margin-top: 20px;">
-        <button onclick="toggleResult()" style="padding:10px 20px; background:#CEDDEF; border:none; border-radius:8px; font-weight:bold;">▼ OCR 분석 결과 보기</button>
-      </div>
-      <div id="resultContainer" style="display: none; margin-top: 10px;">
-        <div class="glass-box">
-          <h3>OCR 결과</h3>
-          <div id="result">OCR 결과 영역</div>
+          <div style="margin-top:20px;">
+            <input type="text" id="manualDate" placeholder="날짜 (예: 2025-06-01)" value="${getTodayDate()}" />
+            <input type="number" id="manualAmount" placeholder="총합 금액 (₩)" />
+          </div>
+        </div>
+
+        <div class="glass-col">
+          <h3>오늘의 감정을 입력해주세요.</h3>
+          <input type="text" id="dailyFeelingInput" placeholder="예: 기쁘다, 힘들었다 등" />
+          <button id="submitBtn">지출 + 감정 전송</button>
+          <div id="submitResult"></div>
         </div>
       </div>
     `;
 
-    const upload = document.getElementById('upload');
-    const preview = document.getElementById('preview');
-    const croppedResult = document.getElementById('croppedResult');
-    const result = document.getElementById('result');
     let cropper = null;
     let croppedBlob = null;
 
-    upload.addEventListener('change', () => {
+    document.getElementById("upload").addEventListener("change", () => {
       const file = upload.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = () => {
         preview.src = reader.result;
         preview.style.display = 'block';
-        croppedResult.style.display = 'none';
         if (cropper) cropper.destroy();
-        cropper = new Cropper(preview, {
-          aspectRatio: NaN,
-          viewMode: 1
-        });
+        cropper = new Cropper(preview, { aspectRatio: NaN, viewMode: 1 });
       };
       reader.readAsDataURL(file);
     });
 
-    document.getElementById('confirmCrop').addEventListener('click', () => {
+    document.getElementById("confirmCrop").addEventListener("click", () => {
       if (!cropper) return;
       const canvas = cropper.getCroppedCanvas();
       canvas.toBlob(blob => {
@@ -272,29 +353,58 @@
         croppedResult.style.display = 'block';
         preview.style.display = 'none';
         cropper.destroy();
-        cropper = null;
-      }, 'image/png');
+      });
     });
 
-    window.runOCR = function() {
-      if (!croppedBlob) {
-        alert("크롭 후 버튼을 눌러주세요");
+    document.getElementById("runOCR").addEventListener("click", async () => {
+      if (!croppedBlob) return alert("크롭 후 OCR 실행해주세요");
+      const result = await uploadOCRImage(croppedBlob);
+      if (result) {
+        document.getElementById("manualDate").value = result.date || getTodayDate();
+        document.getElementById("manualAmount").value = result.amount || "";
+        document.getElementById("ocrResult").innerText = "OCR 인식 성공";
+      } else {
+        document.getElementById("ocrResult").innerText = "OCR 실패";
+      }
+    });
+
+    document.getElementById("submitBtn").addEventListener("click", async () => {
+      const date = document.getElementById("manualDate").value;
+      const total = document.getElementById("manualAmount").value;
+      const emotion = document.getElementById("dailyFeelingInput").value;
+      const category = document.getElementById("category").value;
+      const resultBox = document.getElementById("submitResult");
+
+      if (!date || !total || !emotion || !category) {
+        resultBox.innerText = "모든 항목을 입력해주세요.";
         return;
       }
-      result.innerText = "OCR 인식 중...";
-      Tesseract.recognize(
-        croppedBlob,
-        'kor',
-        {
-          langPath: 'https://tessdata.projectnaptha.com/4.0.0/',
-          logger: m => console.log(m)
+
+      try {
+        const res = await fetch("http://localhost:3000/api/data", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user_token}`
+          },
+          body: JSON.stringify({
+            date,
+            total,
+            emotion_string: emotion,
+            category
+          })
+        });
+
+        const data = await res.json();
+        if (!data.err) {
+          resultBox.innerText = `저장 완료: ${data.emotion_response || "처리됨"}`;
+        } else {
+          resultBox.innerText = `에러 발생: ${data.err}`;
         }
-      ).then(({ data: { text } }) => {
-        result.innerText = text;
-      }).catch(err => {
-        result.innerText = `오류 발생: ${err.message}`;
-      });
-    }
+      } catch (err) {
+        resultBox.innerText = `전송 실패: ${err.message}`;
+      }
+    });
   }
 
   function toggleResult() {
@@ -350,18 +460,156 @@
       affirmationBox.innerHTML = "";
     }
   }
+async function showBudget() {
+  const main = document.getElementById("main");
 
-      function showBudget() {
-        document.getElementById("main").innerHTML = `
-          <div class="glass-box">
-            <h2>이번 달 예산</h2>
-            <input type="number" id="totalBudget" placeholder="총 예산 입력 (₩)" />
-            <input type="number" id="usedBudget" placeholder="사용한 금액 입력 (₩)" />
-            <button onclick="drawChart()" style="margin-top:10px; padding:8px 16px; border:none; background:#83A2DB; color:white; border-radius:8px;">한눈에 확인</button>
-            <canvas id="budgetChart" width="300" height="300"></canvas>
-          </div>
-        `;
+  // 이번 달 사용 금액 서버에서 받아오기
+  let usedAmount = 0;
+  try {
+    const res = await fetch(`http://localhost:3000/api/receipts/usage/month/${user_id}`, {
+      headers: { Authorization: `Bearer ${user_token}` }
+    });
+    const data = await res.json();
+    usedAmount = data.total_used || 0;
+  } catch (err) {
+    console.error("이번 달 사용 금액 조회 실패:", err);
+  }
+
+  main.innerHTML = `
+    <div class="glass-box">
+      <h2>이번 달 예산</h2>
+      <p style="font-size: 16px; margin-bottom: 15px;">이번 달 지출 총합: <strong>${usedAmount.toLocaleString()}원</strong></p>
+      <input type="number" id="totalBudget" placeholder="총 예산 입력 (₩)" style="padding: 5px 16px; margin-bottom: 10px; border-radius: 8px;" />
+      <input type="number" id="usedBudget" value="${usedAmount}" readonly style="padding: 5px 16px; margin-bottom: 20px; border-radius: 8px; background:#eee; display: none;" />
+      <button onclick="drawChart()" style="margin-top:10px; padding:8px 16px; border:none; background:#83A2DB; color:white; border-radius:8px;">한눈에 확인</button>
+      <canvas id="budgetChart" width="300" height="300"></canvas>
+    </div>
+  `;
+
+  // 전역변수로 저장
+  window.usedAmount = usedAmount;
+}
+
+function drawChart() {
+  const totalInput = document.getElementById("totalBudget");
+  const usedInput = document.getElementById("usedBudget");
+
+  if (!totalInput || !usedInput) {
+    console.error("예산 입력 필드를 찾을 수 없습니다.");
+    return;
+  }
+
+  const total = parseInt(totalInput.value) || 0;
+  const used = parseInt(usedInput.value) || 0;
+  const remain = total - used;
+
+  const ctx = document.getElementById('budgetChart').getContext('2d');
+  if (window.budgetChartInstance) {
+    window.budgetChartInstance.destroy();
+  }
+
+  window.budgetChartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['사용한 금액', '남은 금액'],
+      datasets: [{
+        data: [used, remain > 0 ? remain : 0],
+        backgroundColor: ['#CE6969', '#83A2DB'],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            font: {
+              family: 'SUIT',
+              size: 14
+            }
+          }
+        }
       }
+    }
+  });
+}
+
+//       async function showBudget() {
+//   const main = document.getElementById("main");
+
+//   // 이번 달 사용 금액 서버에서 받아오기
+//   let usedAmount = 0;
+//   try {
+//     const res = await fetch(`http://localhost:3000/api/receipts/usage/month/${user_id}`, {
+//       headers: { Authorization: `Bearer ${user_token}` }
+//     });
+//     const data = await res.json();
+//     usedAmount = data.total_used || 0;
+//   } catch (err) {
+//     console.error("이번 달 사용 금액 조회 실패:", err);
+//   }
+
+//   main.innerHTML = `
+//     <div class="glass-box">
+//       <h2>이번 달 예산</h2>
+//       <p style="font-size: 16px; margin-bottom: 15px;">이번 달 지출 총합: <strong>${usedAmount.toLocaleString()}원</strong></p>
+//       <input type="number" id="totalBudget" placeholder="총 예산 입력 (₩)" style="padding: 5px 16px; margin-bottom: 20px; border-radius: 8px;" />
+//       <button onclick="drawChart()" style="margin-top:10px; padding:8px 16px; border:none; background:#83A2DB; color:white; border-radius:8px;">한눈에 확인</button>
+//       <canvas id="budgetChart" width="300" height="300"></canvas>
+//     </div>
+//   `;
+
+//   // 사용한 금액은 전역변수로 저장해두고 차트 그릴 때 씁니다.
+//   window.usedAmount = usedAmount;
+// }
+
+// function drawChart() {
+//   const totalInput = document.getElementById("totalBudget");
+//   const usedInput = document.getElementById("usedBudget");
+
+//   if (!totalInput || !usedInput) {
+//     console.error("예산 입력 필드를 찾을 수 없습니다.");
+//     return;
+//   }
+
+//   const total = parseInt(totalInput.value);
+//   const used = parseInt(usedInput.value);
+//   const remain = total - used;
+
+//   const ctx = document.getElementById('budgetChart').getContext('2d');
+//   // 기존 차트가 있으면 제거
+//   if (window.budgetChartInstance) {
+//     window.budgetChartInstance.destroy();
+//   }
+
+//   window.budgetChartInstance = new Chart(ctx, {
+//     type: 'doughnut',
+//     data: {
+//       labels: ['사용한 금액', '남은 금액'],
+//       datasets: [{
+//         data: [used, remain > 0 ? remain : 0],
+//         backgroundColor: ['#CE6969', '#83A2DB'],
+//         borderWidth: 1
+//       }]
+//     },
+//     options: {
+//       responsive: true,
+//       plugins: {
+//         legend: {
+//           position: 'bottom',
+//           labels: {
+//             font: {
+//               family: 'SUIT',
+//               size: 14
+//             }
+//           }
+//         }
+//       }
+//     }
+//   });
+// }
+
   
       function drawChart() {
         const total = parseInt(document.getElementById("totalBudget").value);
@@ -396,111 +644,353 @@
         });
       }
   
-      function showLunchMap() {
-    const lunchBudget = 8000; // 예시 값
+      async function showEmotionDiary() {
+  const main = document.getElementById("main");
 
-    document.getElementById("main").innerHTML = `
-      <div class="glass-box">
-        <h2>점심 메뉴 추천 🍱</h2>
-        <p>1인당 점심 예산: 약 ₩${lunchBudget.toLocaleString()}원</p>
-        <div id="map" style="width:100%; height:400px; border-radius:10px;"></div>
+  // 오늘 날짜
+  const today = new Date();
+  const end = today.toISOString().split('T')[0];
+
+  // 한 달 전 날짜
+  const past = new Date();
+  past.setMonth(today.getMonth() - 1);
+  const start = past.toISOString().split('T')[0];
+
+  main.innerHTML = `
+    <div id="calendar-view">
+      <div class="emotion-diary-container">
+        <div class="glass-col emotion-table">
+          <h2 style="text-align:center; font-weight:bold;">감정 다이어리</h2>
+          <table id="diaryTable">
+            <thead>
+              <tr>
+                <th>날짜</th>
+                <th>감정</th>
+                <th>그날의 문장</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="3" style="text-align:center;">데이터 로딩 중...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="glass-col" style="flex: 1;">
+          <h3 style="font-size:25px;">이번 주의 감정</h3>
+          <canvas id="threeCanvas" style="width: 100%; height: 300px;"></canvas>
+        </div>
       </div>
-    `;
+    </div>
+  `;
 
-    const dankookDujon = { lat: 37.321877, lng: 127.126471 };
+  const url = `http://localhost:3000/api/emotion-diary/range?userId=${user_id}&start=${start}&end=${end}`;  // 여기 url 정의 꼭 해주세요
 
-    const map = new google.maps.Map(document.getElementById("map"), {
-      center: dankookDujon,
-      zoom: 15,
+  try {
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${user_token}` }
     });
+    const data = await res.json();
 
-    // 예시 마커 (단국대 위치)
-    new google.maps.Marker({
-      map,
-      position: dankookDujon,
-      title: "단국대학교 죽전캠퍼스",
-    });
+    if (data.err) {
+      if (data.err.name === "TokenExpiredError") {
+        alert("로그인 세션이 만료되었습니다. 다시 로그인해주세요.");
+        window.location.href = "login.html";
+        return;
+      }
+      throw new Error(data.err.message || "서버 에러");
+    }
+
+    const tbody = document.querySelector("#diaryTable tbody");
+    if (!Array.isArray(data) || data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">감정 일기 데이터가 없습니다.</td></tr>`;
+    } else {
+      tbody.innerHTML = "";
+      const emotionMap = {
+        '기쁨': '😄',
+        '중립': '😐',
+        '불안': '🥶',
+        '슬픔': '😭',
+        '분노': '😡'
+      };
+
+      data.forEach(entry => {
+  // 날짜가 '2025-06-02T15:23:45.000Z' 형식이면 'T' 기준으로 앞부분만 사용
+  const dateOnly = entry.date.includes('T') ? entry.date.split('T')[0] : entry.date;
+  const dateFormatted = dateOnly.slice(5).replace('-', '/'); // MM/DD 형식
+
+  const emoji = emotionMap[entry.emotion] || '❓';
+
+  tbody.innerHTML += `
+    <tr>
+      <td>${dateFormatted}</td>
+      <td style="font-size:24px;">${emoji}</td>
+      <td>${entry.sentence || ''}</td>
+    </tr>
+  `;
+});
+
+    }
+  } catch (err) {
+    console.error("감정 일기 조회 실패:", err);
+    const tbody = document.querySelector("#diaryTable tbody");
+    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:red;">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>`;
   }
 
-  
-      function showSpending() {
-        document.getElementById("main").innerHTML = `
-          <div class="glass-row-2">
-            <div class="glass-col">
-              <h3>분야별 총 지출</h3>
-              <canvas id="categoryTotalChart"></canvas>
-            </div>
-            <div class="glass-col">
-              <h3>하루 지출 총합 변화</h3>
-              <canvas id="dailyTotalChart"></canvas>
-            </div>
-          </div>
-          <div class="glass-row-2">
-          <div class="glass-col" style="width: 100%;">
-            <h3>분야별 일별 지출 변화</h3>
-            <canvas id="categoryDailyChart"></canvas>
-          </div>
-        </div>
-        `;
-        
-  
-        new Chart(document.getElementById("categoryTotalChart"), {
-          type: 'bar',
-          data: {
-            labels: ['식비', '교통', '쇼핑', '구독', '기타'],
-            datasets: [{
-              label: '지출 금액',
-              data: [60000, 11500, 38500, 10000, 15000],
-              backgroundColor: '#83A2DB',
-              borderRadius: 8
-            }]
+  init3D();  // 기존 3D 함수 실행
+}
+
+
+function showSpending() {
+  document.getElementById("main").innerHTML = `
+    <div class="glass-box">
+      <h2></h2>
+      <select id="chartSelector" style="padding: 8px 16px; margin-bottom: 20px; border-radius: 8px;">
+        <option value="emotionTotal">감정별 지출 총액</option>
+        <option value="dailyEmotion">일별 감정과 지출</option>
+        <option value="categoryTotal">카테고리별 지출</option>
+      </select>
+      <canvas id="spendingChart" height="300"></canvas>
+    </div>
+  `;
+
+  // chart 변수를 전역처럼 처리 (재사용 위해)
+  let currentChart = null;
+
+  const selector = document.getElementById("chartSelector");
+  selector.addEventListener("change", drawSelectedChart);
+  drawSelectedChart();  // 첫 실행
+
+  async function drawSelectedChart() {
+    const selected = selector.value;
+    const canvas = document.getElementById("spendingChart");
+    const ctx = canvas.getContext("2d");
+
+    if (currentChart) {
+      currentChart.destroy();
+    }
+
+    if (document.getElementById('emotionSummary')) {
+      document.getElementById('emotionSummary').remove();
+    }
+
+    if (selected === "emotionTotal") {
+      currentChart = await drawEmotionTotalChart(ctx);
+    } else if (selected === "dailyEmotion") {
+      currentChart = await drawDailyEmotionChart(ctx);
+    } else if (selected === "categoryTotal") {
+      currentChart = await drawCategoryChart(ctx);
+    }
+  }
+
+  async function drawEmotionTotalChart(ctx) {
+    try {
+      const res = await fetch("http://localhost:3000/api/graph/emotion", {
+        headers: { Authorization: `Bearer ${user_token}` }
+      });
+      const data = await res.json();
+
+      const labels = data.map(d => d.emotion);
+      const values = data.map(d => d.total);
+      const colors = ['#f7c873', '#ce6969', '#83A2DB', '#ff7aa2', '#84d9c0'];
+      const total = values.reduce((a, b) => a + b, 0);
+      const percents = values.map(v => Math.round((v / total) * 100));
+      const maxIndex = values.indexOf(Math.max(...values));
+
+      const summary = document.createElement("h3");
+      summary.id = "emotionSummary";
+      summary.style.textAlign = "center";
+      summary.style.marginBottom = "15px";
+      summary.innerHTML = `최근 한 달 간 <span style="color:${colors[maxIndex]}; font-weight:bold; font-size:30px">${labels[maxIndex]}</span> 감정에서 지출이 가장 많아요`;
+      document.querySelector(".glass-box").insertBefore(summary, document.getElementById("spendingChart"));
+
+      return new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: '지출 총액',
+            data: values,
+            backgroundColor: colors,
+            borderRadius: 10
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function (ctx) {
+                  return `₩${ctx.raw.toLocaleString()} (${percents[ctx.dataIndex]}%)`;
+                }
+              }
+            },
+            legend: { display: false }
           },
-          options: {
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true } }
+          scales: {
+            x: { beginAtZero: true }
           }
-        });
-  
-        new Chart(document.getElementById("dailyTotalChart"), {
-          type: 'line',
-          data: {
-            labels: ['5/1', '5/2', '5/3', '5/4', '5/5'],
-            datasets: [{
-              label: '총 지출 금액',
-              data: [19000, 15000, 19500, 13000, 34500],
-              backgroundColor: 'rgba(131, 162, 219, 0.3)',
-              borderColor: '#83A2DB',
-              tension: 0.4,
-              fill: true
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: { legend: { position: 'bottom' } },
-            scales: { y: { beginAtZero: true } }
-          }
-        });
-  
-        new Chart(document.getElementById("categoryDailyChart"), {
-          type: 'line',
-          data: {
-            labels: ['5/1', '5/2', '5/3', '5/4', '5/5'],
-            datasets: [
-              { label: '식비', data: [10000, 12000, 9000, 6000, 23000], borderColor: '#FF6384', fill: false },
-              { label: '교통', data: [3000, 2000, 2500, 1500, 2500], borderColor: '#36A2EB', fill: false },
-              { label: '쇼핑', data: [6000, 10000, 8000, 5500, 9000], borderColor: '#FFCE56', fill: false },
-              
-            ]
-          },
-          options: {
-            responsive: true,
-            plugins: { legend: { position: 'bottom' } },
-            scales: { y: { beginAtZero: true } }
-          }
-        });
+        }
+      });
+    } catch (err) {
+      console.error("emotion chart error:", err);
+    }
+  }
+async function drawDailyEmotionChart(ctx) {
+  try {
+    const res = await fetch("http://localhost:3000/api/graph/daily", {
+      headers: { Authorization: `Bearer ${user_token}` }
+    });
+    const data = await res.json();
+
+    // 날짜에서 시간 제거
+    data.forEach(d => {
+      if (typeof d.date === 'string' && d.date.includes('T')) {
+        d.date = d.date.split('T')[0];
       }
-      
+    });
+
+    return new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: data.map(d => d.date),
+        datasets: [{
+          label: '일별 감정 지출',
+          data: data.map(d => d.total),
+          fill: false,
+          borderColor: '#83A2DB',
+          tension: 0.3
+        }]
+      },
+      options: {
+        plugins: {
+          tooltip: {
+            multiLine: true,
+            callbacks: {
+              label: function (ctx) {
+                const item = data[ctx.dataIndex];
+                return [`날짜: ${item.date}`, `감정: ${item.emotion}`, `지출: ₩${item.total.toLocaleString()}`];
+              }
+            }
+          },
+          legend: { display: false }
+        },
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  } catch (err) {
+    console.error("daily chart error:", err);
+  }
+}
+
+
+  async function drawCategoryChart(ctx) {
+    try {
+      const res = await fetch("http://localhost:3000/api/graph/category", {
+        headers: { Authorization: `Bearer ${user_token}` }
+      });
+      const data = await res.json();
+
+      return new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: data.map(d => d.category),
+          datasets: [{
+            label: '카테고리별 지출',
+            data: data.map(d => d.total),
+            backgroundColor: '#83A2DB',
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    } catch (err) {
+      console.error("category chart error:", err);
+    }
+  }
+}
+
+
+      function showCalendar() {
+  document.getElementById("main").innerHTML = `
+    <div id='calendar-container'>
+      <div id='calendar'></div>
+    </div>
+  `;
+
+  const calendarEl = document.getElementById('calendar');
+  const calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'dayGridMonth',
+    locale: 'ko',
+    height: 'auto',
+    headerToolbar: {
+      left: 'prev',
+      center: 'title',
+      right: 'next'
+    },
+    events: function(fetchInfo, successCallback, failureCallback) {
+      // fetchInfo.startStr, fetchInfo.endStr 에 현재 달력에 보이는 시작, 끝 날짜(YYYY-MM-DD)
+      fetch(`http://localhost:3000/api/receipts/usage/range?userId=${user_id}&start=${fetchInfo.startStr}&end=${fetchInfo.endStr}`, {
+        headers: {
+          Authorization: `Bearer ${user_token}`
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        // 서버에서 받은 데이터 [{date, emotion, amount}, ...]을
+        // FullCalendar 이벤트 포맷으로 변환
+        const events = data.map(item => ({
+          start: item.date,
+          extendedProps: {
+            emotion: item.emotion,
+            amount: item.amount
+          }
+        }));
+        successCallback(events);
+      })
+      .catch(err => {
+        console.error('이벤트 로드 실패:', err);
+        failureCallback(err);
+      });
+    },
+    eventContent: function (arg) {
+      const emotionMap = {
+        '기쁨': '😄',
+        '중립': '😐',
+        '불안': '🥶',
+        '슬픔': '😭',
+        '분노': '😡'
+      };
+      const emotion = arg.event.extendedProps.emotion || '';
+      const emoji = emotionMap[emotion] || '❓';
+      const amount = arg.event.extendedProps.amount || 0;
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = `
+        <div style="font-size:35px;">${emoji}</div>
+        <div style="font-size:12px; color:#444;">₩${amount.toLocaleString()}</div>
+      `;
+      return { domNodes: [wrapper] };
+    },
+    eventDidMount: function (info) {
+      info.el.style.backgroundColor = 'transparent';
+      info.el.style.border = 'none';
+      info.el.style.textAlign = 'center';
+    }
+  });
+
+  calendar.render();
+  
+}
+
+
       let scene, camera, renderer, model,controls;
     
       function showEmotion() {
@@ -713,6 +1203,8 @@
 //     console.error("오류 발생:", err);
 //   }
 // }
+
+
 
 
 
