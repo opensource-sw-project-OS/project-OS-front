@@ -163,6 +163,28 @@
 ---
 
 
+## repository 구조
+
+```
+📁 models                       ← 감정을 나타내는 3D GLB 파일들
+├── 📄 angry.glb                ← 분노 감정 모델 
+├── 📄 anxious.glb              ← 불안 감정 모델 
+├── 📄 happy.glb                ← 기쁨 감정 모델 
+├── 📄 normal.glb               ← 중립 감정 모델 
+└── 📄 sad.glb                  ← 슬픔 감정 모델 
+
+📁 public                       ← 정적 파일(CSS, JS) 저장 위치 
+├── 📁 css
+│   └── 📄 dashboard.css        ← 대시보드의 스타일을 정의한 CSS 파일 
+└── 📁 js
+    └── 📄 dashboard.js         ← 대시보드의 주요 기능 구현 JavaScript 파일 
+
+📁 template                     ← 렌더링될 HTML 템플릿 페이지들 
+├── 📄 dashboard.html           ← 메인 대시보드 페이지
+├── 📄 login.html               ← 로그인 페이지 
+├── 📄 project_os_intro.html    ← 최초 접속 페이지 
+└── 📄 signup.html              ← 회원가입 페이지 
+```
 
 
 
