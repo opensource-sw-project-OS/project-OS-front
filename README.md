@@ -1,4 +1,8 @@
-# 💻project-OS-front💻
+<img src="https://capsule-render.vercel.app/api?type=venom&height=300&color=gradient&text=Project_OS_Front&fontColor=BLACK&fontSize=70&descAlign=50">
+
+
+## 📜 GitHub 규칙
+
 #### 👩‍💻 프로젝트 초반 : fork 후 test branch에서 commit하고 Pull Request
 - 초반에는 간단한 구조이므로 fork 방식으로 진행
   
@@ -9,6 +13,10 @@
   - main: 배포 가능 상태
   - dev: 테스트 및 feat 조립
   - feat/*: 기능 단위 개발 -> 버그 원인 파악, 롤백 용이
+- Insights - Network
+ 
+   ![image](https://github.com/user-attachments/assets/1e39ae4b-f991-4321-8181-8501e33070ff)
+
 
 <br><br>
 
@@ -133,6 +141,24 @@
   - 새 3d glb 파일들 추가 - 표정 구현
 - 서버 코드 수정하여 그래프 출력 에러 수정
 - api 에러 수정
+
+<br>
+
+### 2025-06-04
+- api 연동 수정 및 api 명세서 작성
+- 예산 기능 남은 예산 및 초과 문구 추가
+- 백엔드 연동시 에러 수정
+- 최종발표 전 테스트
+
+
+<br>
+
+### 2025-06-11
+- 프론트엔드 최종 구조 변경
+  - public 폴더 : 정적 파일
+      - css, js
+
+<br>
 
 ---
 
