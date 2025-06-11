@@ -1,4 +1,8 @@
-# 💻project-OS-front💻
+<img src="https://capsule-render.vercel.app/api?type=venom&height=300&color=gradient&text=Project_OS_Front&fontColor=BLACK&fontSize=70&descAlign=50">
+
+
+## 📜 GitHub 규칙
+
 #### 👩‍💻 프로젝트 초반 : fork 후 test branch에서 commit하고 Pull Request
 - 초반에는 간단한 구조이므로 fork 방식으로 진행
   
@@ -146,7 +150,14 @@
 - 백엔드 연동시 에러 수정
 - 최종발표 전 테스트
 
-  
+
+<br>
+
+### 2025-06-11
+- 프론트엔드 최종 구조 변경
+  - public 폴더 : 정적 파일
+      - css, js
+
 <br>
 
 ---
